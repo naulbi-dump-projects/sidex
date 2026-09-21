@@ -1,24 +1,47 @@
-name: Build Check
+name: Build
 
 on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/build.yml"
-      - "crates/**"
-      - "src-tauri/**"
-      - "sidex-extension-sdk/**"
-      - "Cargo.toml"
-      - "Cargo.lock"
+      - '.github/workflows/build.yml'
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/**'
+      - 'crates/**'
+      - 'src-tauri/**'
+      - 'src-wasm/**'
+      - 'extensions-rust/**'
+      - 'sidex-extension-sdk/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - 'tsconfig.node.json'
+      - 'index.html'
   pull_request:
     branches: [main]
     paths:
-      - ".github/workflows/build.yml"
-      - "crates/**"
-      - "src-tauri/**"
-      - "sidex-extension-sdk/**"
-      - "Cargo.toml"
-      - "Cargo.lock"
+      - '.github/workflows/build.yml'
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/**'
+      - 'crates/**'
+      - 'src-tauri/**'
+      - 'src-wasm/**'
+      - 'extensions-rust/**'
+      - 'sidex-extension-sdk/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - 'tsconfig.node.json'
+      - 'index.html'
+  workflow_dispatch:
 
 env:
   RUST_BACKTRACE: 1
@@ -29,22 +52,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: cargo check (${{ matrix.target }})
+  build:
+    name: Tauri build (${{ matrix.artifact_name }})
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
+            artifact_name: linux-x64
           - os: macos-latest
             target: aarch64-apple-darwin
+            artifact_name: macos-arm64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            artifact_name: windows-x64
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -55,18 +87,51 @@ jobs:
             libgtk-3-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
+            patchelf \
+            libfuse2 \
             libssl-dev
+
+      - name: Install NASM
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (-not (Get-Command nasm -ErrorAction SilentlyContinue)) {
+            choco install nasm --no-progress --yes
+          }
+          nasm -version
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Setup built-in extensions
+        shell: bash
+        run: bash scripts/setup-extensions.sh
+
+      - name: Install create-dmg
+        if: runner.os == 'macOS'
+        run: |
+          brew install create-dmg
+          sudo ln -sf "$(which create-dmg)" /usr/local/bin/create-dmg
+
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: "./src-tauri -> target"
-          key: check-${{ matrix.target }}
+          workspaces: './src-tauri -> target'
+          key: build-${{ matrix.target }}
 
-      - name: Cargo check
-        run: cargo check --manifest-path src-tauri/Cargo.toml --target ${{ matrix.target }}
+      - name: Build Tauri app
+        timeout-minutes: 40
+        run: npx tauri build --target ${{ matrix.target }}
+
+      - name: Upload bundled artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sidex-${{ matrix.artifact_name }}
+          path: target/${{ matrix.target }}/release/bundle/**
+          if-no-files-found: error
+          retention-days: 7
