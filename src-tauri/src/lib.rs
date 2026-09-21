@@ -320,9 +320,17 @@ fn build_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         )
         .build()?;
 
-    let window_menu = SubmenuBuilder::with_id(app, "window_menu", "Window")
+    let cycle_windows_item = MenuItemBuilder::with_id("cycle_windows", "Cycle Through Windows")
+        .accelerator("CmdOrCtrl+`")
+        .build(app)?;
+
+    let window_menu = SubmenuBuilder::with_id(app, tauri::menu::WINDOW_SUBMENU_ID, "Window")
         .item(&PredefinedMenuItem::minimize(app, None)?)
         .item(&PredefinedMenuItem::maximize(app, None)?)
+        .item(&PredefinedMenuItem::separator(app)?)
+        .item(&cycle_windows_item)
+        .item(&PredefinedMenuItem::separator(app)?)
+        .item(&PredefinedMenuItem::close_window(app, None)?)
         .build()?;
 
     let help_menu = SubmenuBuilder::with_id(app, "help_menu", "Help")
@@ -676,8 +684,33 @@ pub fn run() {
         })
         .on_menu_event(|app, event| {
             let id = event.id().0.as_str();
-            if let Some(window) = app.get_webview_window("main") {
-                let escaped = id.replace('\\', "\\\\").replace('\'', "\\'");
+
+            if id == "cycle_windows" {
+                let mut windows: Vec<_> = app.webview_windows().into_values().collect();
+                if windows.is_empty() {
+                    return;
+                }
+
+                windows.sort_by_key(|window| window.label().to_string());
+
+                let focused_index = windows
+                    .iter()
+                    .position(|window| window.is_focused().unwrap_or(false));
+                let next_index = focused_index.map_or(0, |index| (index + 1) % windows.len());
+                if let Some(next_window) = windows.get(next_index) {
+                    let _ = next_window.set_focus();
+                }
+                return;
+            }
+
+            let escaped = id.replace('\\', "\\\\").replace('\'', "\\'");
+            let windows = app.webview_windows();
+            let target = windows
+                .values()
+                .find(|window| window.is_focused().unwrap_or(false))
+                .or_else(|| windows.get("main"));
+
+            if let Some(window) = target {
                 let _ = window.eval(format!(
                     "window.dispatchEvent(new CustomEvent('sidex-native-menu', {{ detail: '{escaped}' }}))"
                 ));
