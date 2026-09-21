@@ -1,11 +1,13 @@
 use crate::commands::extension_platform::{read_extension_manifest, ExtensionManifest};
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use base64::Engine as _;
 use serde::Serialize;
 use sidex_extensions::contributions::{parse_contributions, ContributionPoint};
 use sidex_extensions::installer::{
     install_from_vsix as crate_install_from_vsix, uninstall as crate_uninstall,
 };
 use sidex_extensions::manifest::sanitize_ext_id;
-use sidex_extensions::marketplace::MarketplaceClient;
+use sidex_extensions::marketplace::{current_target_platform, MarketplaceClient};
 use sidex_extensions::paths::user_extensions_dir;
 use sidex_extensions::vsix::{install_package, unpack_vsix, validate_vsix};
 use std::fs;
@@ -13,6 +15,7 @@ use std::path::Path;
 use std::sync::Arc;
 use tauri::AppHandle;
 use tokio::sync::Mutex;
+use url::Url;
 
 /// Shared marketplace client — one HTTP connection pool per process,
 /// so searches don't re-do TCP+TLS handshakes on every keystroke.
@@ -60,6 +63,131 @@ fn to_installed(
     }
 }
 
+/// Replaces an URL's target platform with the current native build target.
+///
+/// The webview's platform detection can be unavailable or incorrect. The
+/// native backend is the authoritative source because its target is fixed at
+/// compile time.
+fn ensure_target_platform(url: &str) -> String {
+    let Ok(mut parsed) = Url::parse(url) else {
+        return url.to_owned();
+    };
+
+    let platform = current_target_platform();
+    let mut found_platform = false;
+    let mut query = Vec::new();
+
+    for (key, value) in parsed.query_pairs() {
+        if key == "targetPlatform" {
+            if !found_platform {
+                query.push((key.into_owned(), platform.to_owned()));
+                found_platform = true;
+            }
+        } else {
+            query.push((key.into_owned(), value.into_owned()));
+        }
+    }
+
+    if !found_platform {
+        query.push(("targetPlatform".to_owned(), platform.to_owned()));
+    }
+
+    let mut query_pairs = parsed.query_pairs_mut();
+    query_pairs.clear();
+    for (key, value) in query {
+        query_pairs.append_pair(&key, &value);
+    }
+    drop(query_pairs);
+
+    parsed.into()
+}
+
+/// Rewrites the platform embedded in a SideX Open VSX proxy VSIX URL.
+///
+/// The proxy's `vsix-<base64url>` segment contains the original Open VSX URL.
+/// It does not honor `targetPlatform` on the outer URL, so platform-specific
+/// VSIX files must be corrected before the request is made.
+fn rewrite_proxy_vsix_platform(url: &str, new_platform: &str) -> String {
+    let Ok(mut proxy_url) = Url::parse(url) else {
+        return url.to_owned();
+    };
+    if !proxy_url.path().contains("/api/asset/openvsx/") {
+        return url.to_owned();
+    }
+
+    let Some(mut proxy_segments) = proxy_url
+        .path_segments()
+        .map(|segments| segments.map(ToOwned::to_owned).collect::<Vec<_>>())
+    else {
+        return url.to_owned();
+    };
+    let Some((vsix_segment_index, encoded_upstream_url)) = proxy_segments
+        .iter()
+        .enumerate()
+        .find_map(|(index, segment)| {
+            segment
+                .strip_prefix("vsix-")
+                .map(|encoded| (index, encoded))
+        })
+    else {
+        return url.to_owned();
+    };
+    let Ok(decoded_bytes) = URL_SAFE_NO_PAD.decode(encoded_upstream_url) else {
+        return url.to_owned();
+    };
+    let Ok(decoded_url) = String::from_utf8(decoded_bytes) else {
+        return url.to_owned();
+    };
+    let Ok(mut upstream_url) = Url::parse(&decoded_url) else {
+        return url.to_owned();
+    };
+    if upstream_url.host_str() != Some("open-vsx.org") {
+        return url.to_owned();
+    }
+
+    let Some(mut upstream_segments) = upstream_url
+        .path_segments()
+        .map(|segments| segments.map(ToOwned::to_owned).collect::<Vec<_>>())
+    else {
+        return url.to_owned();
+    };
+    let Some(file_index) = upstream_segments
+        .iter()
+        .position(|segment| segment == "file")
+    else {
+        return url.to_owned();
+    };
+    let Some(filename) = upstream_segments.get(file_index + 1) else {
+        return url.to_owned();
+    };
+    let Some(filename_without_extension) = filename.strip_suffix(".vsix") else {
+        return url.to_owned();
+    };
+    let Some((filename_prefix, old_platform)) = filename_without_extension.rsplit_once('@') else {
+        return url.to_owned();
+    };
+    let Some(platform_index) = file_index.checked_sub(2) else {
+        return url.to_owned();
+    };
+    if old_platform.is_empty()
+        || old_platform == new_platform
+        || upstream_segments
+            .get(platform_index)
+            .is_none_or(|platform| platform != old_platform)
+    {
+        return url.to_owned();
+    }
+
+    upstream_segments[platform_index] = new_platform.to_owned();
+    upstream_segments[file_index + 1] = format!("{filename_prefix}@{new_platform}.vsix");
+    upstream_url.set_path(&format!("/{}", upstream_segments.join("/")));
+
+    proxy_segments[vsix_segment_index] =
+        format!("vsix-{}", URL_SAFE_NO_PAD.encode(upstream_url.as_str()));
+    proxy_url.set_path(&format!("/{}", proxy_segments.join("/")));
+    proxy_url.into()
+}
+
 #[tauri::command]
 pub async fn install_extension(vsix_path: String) -> Result<InstalledExtension, String> {
     let vsix = Path::new(&vsix_path);
@@ -79,6 +207,8 @@ pub async fn install_extension(vsix_path: String) -> Result<InstalledExtension, 
 
 #[tauri::command]
 pub async fn install_extension_from_url(url: String) -> Result<InstalledExtension, String> {
+    let url = rewrite_proxy_vsix_platform(&url, current_target_platform());
+    let url = ensure_target_platform(&url);
     log::info!("downloading extension from {url}");
     let resp = reqwest::get(&url)
         .await
@@ -304,4 +434,88 @@ pub async fn extension_get_contributions(
 
     let points = parse_contributions(&value);
     Ok(points.iter().map(summarize_point).collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn proxy_url(platform: &str) -> String {
+        let upstream_url = format!(
+            "https://open-vsx.org/api/kilocode/kilo-code/{platform}/7.7.6/file/kilocode.kilo-code-7.7.6@{platform}.vsix?probe= "
+        );
+        let encoded = URL_SAFE_NO_PAD.encode(upstream_url);
+        assert!(encoded.contains('_'));
+        format!(
+            "https://marketplace.siden.ai/api/asset/openvsx/vsix-{encoded}/Microsoft.VisualStudio.Services.VSIXPackage?redirect=true"
+        )
+    }
+
+    fn decoded_proxy_target(url: &str) -> Url {
+        let proxy_url = Url::parse(url).expect("proxy URL");
+        let encoded = proxy_url
+            .path_segments()
+            .expect("path segments")
+            .find_map(|segment| segment.strip_prefix("vsix-"))
+            .expect("VSIX segment");
+        let decoded = URL_SAFE_NO_PAD.decode(encoded).expect("base64url");
+        Url::parse(&String::from_utf8(decoded).expect("UTF-8 URL")).expect("Open VSX URL")
+    }
+
+    #[test]
+    fn rewrites_url_safe_proxy_vsix_platform() {
+        let url = proxy_url("alpine-arm64");
+        let rewritten = rewrite_proxy_vsix_platform(&url, "win32-x64");
+        let upstream_url = decoded_proxy_target(&rewritten);
+        let segments = upstream_url
+            .path_segments()
+            .expect("path segments")
+            .collect::<Vec<_>>();
+
+        assert_eq!(segments[3], "win32-x64");
+        assert_eq!(segments[6], "kilocode.kilo-code-7.7.6@win32-x64.vsix");
+    }
+
+    #[test]
+    fn leaves_matching_or_malformed_proxy_urls_unchanged() {
+        let matching = proxy_url("win32-x64");
+        assert_eq!(
+            rewrite_proxy_vsix_platform(&matching, "win32-x64"),
+            matching
+        );
+
+        let malformed =
+            "https://marketplace.siden.ai/api/asset/openvsx/vsix-not-base64/VSIXPackage";
+        assert_eq!(
+            rewrite_proxy_vsix_platform(malformed, "win32-x64"),
+            malformed
+        );
+    }
+
+    #[test]
+    fn does_not_rewrite_urls_without_matching_platform_path_and_filename() {
+        let inner = "https://open-vsx.org/api/kilocode/kilo-code/linux-x64/7.7.6/file/kilocode.kilo-code-7.7.6@alpine-arm64.vsix";
+        let encoded = URL_SAFE_NO_PAD.encode(inner);
+        let url =
+            format!("https://marketplace.siden.ai/api/asset/openvsx/vsix-{encoded}/VSIXPackage");
+
+        assert_eq!(rewrite_proxy_vsix_platform(&url, "win32-x64"), url);
+    }
+
+    #[test]
+    fn replaces_all_target_platform_query_values() {
+        let rewritten = ensure_target_platform(
+            "https://marketplace.siden.ai/api/download/openvsx/example?before=1&targetPlatform=linux-x64&targetPlatform=darwin-arm64#fragment",
+        );
+        let parsed = Url::parse(&rewritten).expect("URL");
+        let query = parsed.query_pairs().collect::<Vec<_>>();
+
+        assert_eq!(parsed.fragment(), Some("fragment"));
+        assert_eq!(query[0], ("before".into(), "1".into()));
+        assert_eq!(
+            query[1],
+            ("targetPlatform".into(), current_target_platform().into())
+        );
+        assert_eq!(query.len(), 2);
+    }
 }

@@ -25,6 +25,25 @@ const DEFAULT_BASE_URL: &str = "https://marketplace.siden.ai/api";
 const DEFAULT_PAGE_SIZE: u32 = 20;
 const CACHE_TTL_SECS: u64 = 300;
 
+/// Returns the Open VSX target platform for the current build target.
+pub fn current_target_platform() -> &'static str {
+    match (
+        std::env::consts::OS,
+        std::env::consts::ARCH,
+        cfg!(target_env = "musl"),
+    ) {
+        ("macos", "aarch64", _) => "darwin-arm64",
+        ("macos", _, _) => "darwin-x64",
+        ("windows", "aarch64", _) => "win32-arm64",
+        ("windows", _, _) => "win32-x64",
+        ("linux", "aarch64", true) => "alpine-arm64",
+        ("linux", _, true) => "alpine-x64",
+        ("linux", "aarch64", false) => "linux-arm64",
+        ("linux", _, false) => "linux-x64",
+        _ => "linux-x64",
+    }
+}
+
 /// Builds a [`reqwest::Client`] tuned for marketplace traffic. Keeps a
 /// long-lived connection pool with TCP keep-alive, request-level
 /// gzip/brotli, HTTP/2 adaptive windowing, and a generous
@@ -449,8 +468,9 @@ impl MarketplaceClient {
     pub async fn download_vsix_bytes(&self, id: &str, version: &str) -> Result<Vec<u8>> {
         let (namespace, name) = id.split_once('.').unwrap_or(("unknown", id));
 
+        let target_platform = current_target_platform();
         let url = format!(
-            "{base}/{namespace}/{name}/{version}/file/{namespace}.{name}-{version}.vsix",
+            "{base}/{namespace}/{name}/{version}/file/{namespace}.{name}-{version}.vsix?targetPlatform={target_platform}",
             base = self.base_url,
         );
 
@@ -591,6 +611,21 @@ mod tests {
     fn custom_base_url_strips_trailing_slash() {
         let client = MarketplaceClient::with_base_url("https://example.com/api/");
         assert_eq!(client.base_url, "https://example.com/api");
+    }
+
+    #[test]
+    fn current_target_platform_is_supported_by_open_vsx() {
+        assert!(matches!(
+            current_target_platform(),
+            "darwin-arm64"
+                | "darwin-x64"
+                | "win32-arm64"
+                | "win32-x64"
+                | "alpine-arm64"
+                | "alpine-x64"
+                | "linux-arm64"
+                | "linux-x64"
+        ));
     }
 
     #[test]

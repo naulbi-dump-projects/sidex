@@ -1116,6 +1116,14 @@ export function createApiFactoryAndRegisterActors(accessor: ServicesAccessor): I
 			get visibleTextEditors() {
 				return extHostEditors.getVisibleTextEditors();
 			},
+			// Notebook editors are not implemented by SideX yet. Keep the API
+			// contract so extensions can safely inspect the current editor state.
+			get visibleNotebookEditors() {
+				return [];
+			},
+			get activeNotebookEditor() {
+				return undefined;
+			},
 			get activeTerminal() {
 				return extHostTerminalService.activeTerminal;
 			},
@@ -1149,6 +1157,8 @@ export function createApiFactoryAndRegisterActors(accessor: ServicesAccessor): I
 			onDidChangeVisibleTextEditors(listener, thisArg, disposables) {
 				return _asExtensionEvent(extHostEditors.onDidChangeVisibleTextEditors)(listener, thisArg, disposables);
 			},
+			onDidChangeVisibleNotebookEditors: Event.None,
+			onDidChangeActiveNotebookEditor: Event.None,
 			onDidChangeTextEditorSelection(
 				listener: (e: vscode.TextEditorSelectionChangeEvent) => any,
 				thisArgs?: any,
