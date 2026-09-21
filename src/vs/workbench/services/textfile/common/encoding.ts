@@ -287,6 +287,12 @@ export async function encodingExists(encoding: string): Promise<boolean> {
 		'lib/iconv-lite-umd.js'
 	);
 
+	// The optional Node-oriented module is unavailable in the Tauri webview.
+	// Keep UTF-8 BOM files openable instead of dereferencing an absent loader.
+	if (!iconv) {
+		return true;
+	}
+
 	return iconv.encodingExists(toNodeEncoding(encoding));
 }
 
