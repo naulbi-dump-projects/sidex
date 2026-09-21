@@ -7,11 +7,21 @@ import { URI } from '../../../base/common/uri.js';
 import { ILanguagePackItem, ILanguagePackService } from '../common/languagePacks.js';
 import { IExtensionGalleryService } from '../../extensionManagement/common/extensionManagement.js';
 import { CancellationToken } from '../../../base/common/cancellation.js';
+import { IExtensionService } from '../../../workbench/services/extensions/common/extensions.js';
+
+const LANGUAGE_PACK_EXTENSION_PREFIX = 'vscode-language-pack-';
+const LANGUAGE_PACK_LOCALE_ALIASES: Readonly<Record<string, string>> = {
+	'zh-hans': 'zh-cn',
+	'zh-hant': 'zh-tw'
+};
 
 export class WebLanguagePacksService implements ILanguagePackService {
 	declare readonly _serviceBrand: undefined;
 
-	constructor(@IExtensionGalleryService private readonly galleryService: IExtensionGalleryService) {}
+	constructor(
+		@IExtensionGalleryService private readonly galleryService: IExtensionGalleryService,
+		@IExtensionService private readonly extensionService: IExtensionService
+	) {}
 
 	async getBuiltInExtensionTranslationsUri(_id: string, _language: string): Promise<URI | undefined> {
 		return undefined;
@@ -45,20 +55,39 @@ export class WebLanguagePacksService implements ILanguagePackService {
 	}
 
 	async getInstalledLanguages(): Promise<ILanguagePackItem[]> {
+		const items: ILanguagePackItem[] = [];
+		const seenLocales = new Set<string>();
 		const extensionId = localStorage.getItem('vscode.nls.languagePackExtensionId');
 		const locale = localStorage.getItem('vscode.nls.locale');
 
-		if (!extensionId || !locale) {
-			return [];
-		}
-
-		return [
-			{
+		if (extensionId && locale) {
+			items.push({
 				id: locale,
 				label: this.getLanguageLabel(locale),
 				extensionId
+			});
+			seenLocales.add(locale.toLowerCase());
+		}
+
+		for (const extension of this.extensionService.extensions) {
+			if (!extension.name.startsWith(LANGUAGE_PACK_EXTENSION_PREFIX)) {
+				continue;
 			}
-		];
+
+			const extensionLocale = this.getLocaleFromExtensionName(extension.name);
+			if (!extensionLocale || seenLocales.has(extensionLocale.toLowerCase())) {
+				continue;
+			}
+
+			items.push({
+				id: extensionLocale,
+				label: this.getLanguageLabel(extensionLocale),
+				extensionId: extension.identifier.value
+			});
+			seenLocales.add(extensionLocale.toLowerCase());
+		}
+
+		return items;
 	}
 
 	private getLanguageLabel(locale: string): string {
@@ -79,5 +108,13 @@ export class WebLanguagePacksService implements ILanguagePackService {
 			hu: 'Magyar'
 		};
 		return labels[locale.toLowerCase()] ?? locale;
+	}
+
+	private getLocaleFromExtensionName(name: string): string | undefined {
+		const locale = name.slice(LANGUAGE_PACK_EXTENSION_PREFIX.length);
+		if (!locale) {
+			return undefined;
+		}
+		return LANGUAGE_PACK_LOCALE_ALIASES[locale.toLowerCase()] ?? locale;
 	}
 }
