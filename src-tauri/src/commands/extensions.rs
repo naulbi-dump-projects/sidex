@@ -157,7 +157,7 @@ fn rewrite_proxy_vsix_platform(url: &str, new_platform: &str) -> String {
     else {
         return url.to_owned();
     };
-    let Some(filename) = upstream_segments.get(file_index + 1) else {
+    let Some(filename) = upstream_segments.get(file_index + 1).cloned() else {
         return url.to_owned();
     };
     let Some(filename_without_extension) = filename.strip_suffix(".vsix") else {
