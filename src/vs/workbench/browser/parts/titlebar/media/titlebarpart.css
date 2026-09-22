@@ -319,6 +319,27 @@
 .monaco-workbench .part.titlebar .sidex-search-shortcut {
 	display: none;
 }
+/* Always-visible recovery control for the SideX panel. */
+.monaco-workbench .part.titlebar .sidex-show-panel-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 0;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--vscode-titleBar-activeForeground);
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+	z-index: 2500;
+}
+
+.monaco-workbench .part.titlebar .sidex-show-panel-button:hover {
+	background-color: color-mix(in srgb, var(--vscode-titleBar-activeForeground, #cccccc) 16%, transparent);
+}
+
 /* --- Profile/Settings unified pill button (Windsurf style, rounded 6px) --- */
 .monaco-workbench .part.titlebar .sidex-profile-button {
 	display: flex;

@@ -721,6 +721,17 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 				this.commandService.executeCommand('workbench.action.quickOpen');
 			}));
 
+			// Always keep a way to restore SideX when both its panel and the status bar are hidden.
+			const showSidexButton = append(this.rightContent, $('button.sidex-show-panel-button.codicon.codicon-layout-sidebar-right'));
+			const showSidexLabel = localize('showSidexPanel', 'Show SideX panel');
+			showSidexButton.setAttribute('type', 'button');
+			showSidexButton.setAttribute('aria-label', showSidexLabel);
+			showSidexButton.title = showSidexLabel;
+			this._register(addDisposableListener(showSidexButton, EventType.CLICK, event => {
+				event.stopPropagation();
+				this.layoutService.setPartHidden(false, Parts.SIDEX_PART);
+			}));
+
 			// Unified settings and account drop-down pill button (Cursor/Windsurf style, rounded 6px)
 			const profileButton = append(this.rightContent, $('div.sidex-profile-button'));
 			
