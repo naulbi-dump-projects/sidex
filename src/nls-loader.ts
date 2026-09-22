@@ -1,5 +1,11 @@
 type Translations = Record<string, string>;
 
+interface NlsEntry {
+	module: string;
+	key: string;
+	msg: string;
+}
+
 const sidexTranslations: Record<string, Translations> = {
 	'zh-cn': {
 		'remote.pick.placeholder': '选择一个选项来打开远程窗口',
@@ -59,6 +65,59 @@ const sidexTranslations: Record<string, Translations> = {
 		'remote.pick.container': '컨테이너에서 폴더 열기…',
 		'remote.pick.codespace': 'Codespace에 연결…',
 		remoteExplorer: '원격 탐색기'
+	},
+	ru: {
+		sidexChatIcon: 'Значок SideX',
+		sidex: 'SideX',
+		toggleSidex: 'Показать или скрыть SideX',
+		sidexStatusBarToggle: 'Показать или скрыть SideX',
+		sidexToggle: 'SideX',
+		auxToggle: 'Дополнительная боковая панель',
+		toggleAux: 'Показать или скрыть дополнительную боковую панель',
+		sidexInlineEdit: 'SideX: встроенное редактирование',
+		showSidexPanel: 'Показать панель SideX',
+		sidexSearch: 'Поиск…',
+		sidexOpenFolder: 'Открыть папку…',
+		sidexCloneRepository: 'Клонировать репозиторий…',
+		sidexRecentProjects: 'Недавние проекты…',
+		sidexNewWindow: 'Новое окно',
+		sidexCloseFolder: 'Закрыть папку',
+		sidexSettings: 'Настройки SideX',
+		sidexUsage: 'Использование SideX',
+		sidexEditorSettings: 'Настройки редактора',
+		sidexCommandPalette: 'Палитра команд…',
+		sidexKeyboardShortcuts: 'Сочетания клавиш',
+		sidexExtensions: 'Расширения',
+		sidexConfigureSnippets: 'Настроить фрагменты кода',
+		sidexTasks: 'Задачи',
+		sidexThemes: 'Темы',
+		sidexCheckForUpdates: 'Проверить обновления…',
+		sidexDocs: 'Документация',
+		sidexCommunity: 'Присоединиться к сообществу',
+		sidexSettingsGeneral: 'Общие',
+		sidexSettingsUsage: 'Использование',
+		sidexSettingsModels: 'Модели',
+		sidexSettingsCustomizations: 'Настройка',
+		sidexSettingsTools: 'Инструменты и MCP',
+		sidexSettingsConfiguration: 'Конфигурация',
+		sidexSettingsPreferences: 'Параметры',
+		sidexSettingsNotifications: 'Уведомления',
+		sidexSettingsIndexing: 'Индексирование и статистика',
+		sidexSettingsPrivacy: 'Конфиденциальность',
+		sidexBuiltInAgent: 'Включить встроенный агент SideX',
+		sidexBuiltInAgentDescription: 'Запускать локальный сервер агента SideX. Это не влияет на внешние и системные агенты.',
+		sidexDefaultModel: 'Модель ИИ по умолчанию',
+		sidexDefaultAgentMode: 'Режим агента по умолчанию',
+		sidexAutoScroll: 'Автопрокрутка сообщений',
+		sidexAgentMode: 'Агент',
+		sidexPlanMode: 'План',
+		sidexAskMode: 'Спросить',
+		sidexDefaultAgentModeDescription: 'Выберите возможности агента по умолчанию для новой задачи в рабочей области.',
+		sidexAutoScrollDescription: 'Автоматически прокручивать беседу вниз при получении нового сообщения.',
+		sidexDefaultModelEmptyDescription: 'Добавьте модель в разделе «Модели», чтобы выбрать её для новых бесед.',
+		sidexConfigureModels: 'Настроить модели',
+		sidexNoDefaultModel: 'Без значения по умолчанию (использовать первую доступную)',
+		sidexDefaultModelDescription: 'Выберите модель ИИ, с которой по умолчанию будут начинаться новые беседы.'
 	}
 };
 
@@ -80,6 +139,7 @@ export async function loadNlsMessages(): Promise<void> {
 			console.log('[SideX NLS] auto-detected language pack:', extensionId);
 		} else {
 			console.warn('[SideX NLS] No language pack found for locale:', locale);
+			await loadSidexOnlyMessages(locale);
 			return;
 		}
 	}
@@ -92,23 +152,15 @@ export async function loadNlsMessages(): Promise<void> {
 			return;
 		}
 
-		// Merge SideX-specific translations for strings not in the VS Code language pack
-		const sidexExtra = sidexTranslations[locale.toLowerCase()];
-		if (sidexExtra) {
-			for (const [key, val] of Object.entries(sidexExtra)) {
-				if (!(key in translations)) {
-					translations[key] = val;
-				}
-			}
-		}
+		const sidexExtra = getSidexTranslations(locale);
 
 		const indexRes = await fetch('/nls.messages.json');
 		if (indexRes.ok) {
 			const contentType = indexRes.headers.get('content-type') ?? '';
 			if (contentType.includes('json')) {
-				const nlsEntries: Array<{ key: string; msg: string }> = await indexRes.json();
+				const nlsEntries: NlsEntry[] = await indexRes.json();
 				if (nlsEntries.length > 0) {
-					(globalThis as any)._VSCODE_NLS_MESSAGES = nlsEntries.map(({ key, msg }) => translations[key] ?? msg);
+					(globalThis as any)._VSCODE_NLS_MESSAGES = nlsEntries.map(entry => translations[scopedTranslationKey(entry.module, entry.key)] ?? sidexExtra?.[entry.key] ?? entry.msg);
 					(globalThis as any)._VSCODE_NLS_LANGUAGE = locale;
 					console.log(`[SideX NLS] Loaded ${nlsEntries.length} translations for ${locale} (indexed mode)`);
 					return;
@@ -116,12 +168,28 @@ export async function loadNlsMessages(): Promise<void> {
 			}
 		}
 
-		(globalThis as any)._VSCODE_NLS_TRANSLATIONS = translations;
+		(globalThis as any)._VSCODE_NLS_TRANSLATIONS = sidexExtra ?? {};
 		(globalThis as any)._VSCODE_NLS_LANGUAGE = locale;
 		console.log(`[SideX NLS] Loaded ${Object.keys(translations).length} translations for ${locale} (key mode)`);
 	} catch (e) {
 		console.warn('[SideX NLS] Failed to load translations:', e);
 	}
+}
+
+async function loadSidexOnlyMessages(locale: string): Promise<void> {
+	const sidexExtra = getSidexTranslations(locale);
+	if (!sidexExtra) {
+		return;
+	}
+
+	const indexRes = await fetch('/nls.messages.json');
+	if (!indexRes.ok || !(indexRes.headers.get('content-type') ?? '').includes('json')) {
+		return;
+	}
+
+	const entries: NlsEntry[] = await indexRes.json();
+	(globalThis as any)._VSCODE_NLS_MESSAGES = entries.map(entry => sidexExtra[entry.key] ?? entry.msg);
+	(globalThis as any)._VSCODE_NLS_LANGUAGE = locale;
 }
 
 async function loadFromDisk(extensionId: string): Promise<Translations | null> {
@@ -188,13 +256,34 @@ function parseBundle(raw: string): Translations | null {
 			return null;
 		}
 		const messages: Translations = {};
-		for (const bundle of Object.values(bundles)) {
-			Object.assign(messages, bundle);
+		for (const [module, bundle] of Object.entries(bundles)) {
+			if (!bundle || typeof bundle !== 'object') {
+				continue;
+			}
+			for (const [key, message] of Object.entries(bundle)) {
+				if (typeof message === 'string') {
+					messages[scopedTranslationKey(module, key)] = message;
+				}
+			}
 		}
 		return messages;
 	} catch {
 		return null;
 	}
+}
+
+function scopedTranslationKey(module: string, key: string): string {
+	return `${module}\0${key}`;
+}
+
+function localeCandidates(locale: string): [string, string] {
+	const normalized = locale.toLowerCase().replace(/_/g, '-');
+	return [normalized, normalized.split('-')[0]];
+}
+
+function getSidexTranslations(locale: string): Translations | undefined {
+	const [normalized, language] = localeCandidates(locale);
+	return sidexTranslations[normalized] ?? sidexTranslations[language];
 }
 
 const localeToPackName: Record<string, string> = {
@@ -215,7 +304,8 @@ const localeToPackName: Record<string, string> = {
 };
 
 async function detectInstalledLanguagePack(locale: string): Promise<string | null> {
-	const knownId = localeToPackName[locale.toLowerCase()];
+	const [normalized, language] = localeCandidates(locale);
+	const knownId = localeToPackName[normalized] ?? localeToPackName[language];
 	if (!knownId) {
 		return null;
 	}

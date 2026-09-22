@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 interface NlsEntry {
+	module: string;
 	key: string;
 	msg: string;
 }
@@ -12,14 +13,14 @@ export function nlsPlugin(): Plugin {
 	const dedupIndex = new Map<string, number>();
 	let isBuild = false;
 
-	function getOrAddIndex(key: string, msg: string): number {
-		const dedupKey = `${key}\0${msg}`;
+	function getOrAddIndex(module: string, key: string, msg: string): number {
+		const dedupKey = `${module}\0${key}\0${msg}`;
 		const existing = dedupIndex.get(dedupKey);
 		if (existing !== undefined) {
 			return existing;
 		}
 		const idx = entries.length;
-		entries.push({ key, msg });
+		entries.push({ module, key, msg });
 		dedupIndex.set(dedupKey, idx);
 		return idx;
 	}
@@ -29,6 +30,7 @@ export function nlsPlugin(): Plugin {
 		const files = walkDir(srcDir);
 		let count = 0;
 		for (const file of files) {
+			const module = toNlsModuleId(file);
 			if (!file.endsWith('.ts')) {
 				continue;
 			}
@@ -54,7 +56,7 @@ export function nlsPlugin(): Plugin {
 					continue;
 				}
 				const msg = unquote(code.slice(afterComma, strEnd + 1));
-				getOrAddIndex(key, msg);
+				getOrAddIndex(module, key, msg);
 				count++;
 			}
 		}
@@ -109,6 +111,8 @@ export function nlsPlugin(): Plugin {
 			let pos = 0;
 			let didChange = false;
 
+			const module = toNlsModuleId(id);
+
 			const re = /\blocalize2?\s*\(/g;
 			let m: RegExpExecArray | null;
 
@@ -131,7 +135,7 @@ export function nlsPlugin(): Plugin {
 				}
 
 				const msg = unquote(code.slice(afterComma, strEnd + 1));
-				const idx = getOrAddIndex(key, msg);
+				const idx = getOrAddIndex(module, key, msg);
 
 				result += code.slice(pos, argsStart);
 				result += String(idx);
@@ -157,6 +161,13 @@ export function nlsPlugin(): Plugin {
 			}
 		}
 	};
+}
+
+function toNlsModuleId(file: string): string {
+	return path
+		.relative(path.resolve(process.cwd(), 'src'), file)
+		.replace(/\\/g, '/')
+		.replace(/\.(?:ts|js)$/, '');
 }
 
 function extractKey(arg: string): string | null {

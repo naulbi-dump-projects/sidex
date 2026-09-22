@@ -5,6 +5,7 @@
  *  so it inherits all workbench CSS directly with no custom overrides.
  *--------------------------------------------------------------------------------------------*/
 
+import * as nls from '../../../../../nls.js';
 import { Disposable, DisposableStore } from '../../../../../base/common/lifecycle.js';
 import { ensureSettingsStyles } from './sidexSettingsStyles.js';
 import { GeneralSection } from './sections/generalSection.js';
@@ -30,19 +31,19 @@ export interface SettingsSection {
 }
 
 const NAV_ITEMS: NavItem[] = [
-	{ id: 'general', label: 'General', icon: 'codicon-account' },
-	{ id: 'plan-usage', label: 'Usage', icon: 'codicon-graph' },
+	{ id: 'general', label: nls.localize('sidexSettingsGeneral', 'General'), icon: 'codicon-account' },
+	{ id: 'plan-usage', label: nls.localize('sidexSettingsUsage', 'Usage'), icon: 'codicon-graph' },
 	{ type: 'separator' },
-	{ id: 'models', label: 'Models', icon: 'codicon-circuit-board' },
-	{ id: 'rules', label: 'Customizations', icon: 'codicon-file-text' },
-	{ id: 'tools', label: 'Tools & MCPs', icon: 'codicon-tools' },
-	{ id: 'configuration', label: 'Configuration', icon: 'codicon-gear' },
+	{ id: 'models', label: nls.localize('sidexSettingsModels', 'Models'), icon: 'codicon-circuit-board' },
+	{ id: 'rules', label: nls.localize('sidexSettingsCustomizations', 'Customizations'), icon: 'codicon-file-text' },
+	{ id: 'tools', label: nls.localize('sidexSettingsTools', 'Tools & MCPs'), icon: 'codicon-tools' },
+	{ id: 'configuration', label: nls.localize('sidexSettingsConfiguration', 'Configuration'), icon: 'codicon-gear' },
 	{ type: 'separator' },
-	{ id: 'preferences', label: 'Preferences', icon: 'codicon-settings' },
-	{ id: 'notifications', label: 'Notifications', icon: 'codicon-bell' },
+	{ id: 'preferences', label: nls.localize('sidexSettingsPreferences', 'Preferences'), icon: 'codicon-settings' },
+	{ id: 'notifications', label: nls.localize('sidexSettingsNotifications', 'Notifications'), icon: 'codicon-bell' },
 	{ type: 'separator' },
-	{ id: 'indexing', label: 'Indexing & Stats', icon: 'codicon-database' },
-	{ id: 'privacy', label: 'Privacy', icon: 'codicon-lock' },
+	{ id: 'indexing', label: nls.localize('sidexSettingsIndexing', 'Indexing & Stats'), icon: 'codicon-database' },
+	{ id: 'privacy', label: nls.localize('sidexSettingsPrivacy', 'Privacy'), icon: 'codicon-lock' },
 ];
 
 let _instance: SidexSettingsPanel | null = null;

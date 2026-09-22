@@ -666,13 +666,13 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 				document.body.appendChild(popup);
 
 				const items = [
-					{ icon: 'codicon-folder-opened', label: 'Open Folder...', cmd: 'workbench.action.files.openFolder' },
-					{ icon: 'codicon-source-control', label: 'Clone Repository...', cmd: 'git.clone' },
+					{ icon: 'codicon-folder-opened', label: localize('sidexOpenFolder', 'Open Folder...'), cmd: 'workbench.action.files.openFolder' },
+					{ icon: 'codicon-source-control', label: localize('sidexCloneRepository', 'Clone Repository...'), cmd: 'git.clone' },
 					{ separator: true },
-					{ icon: 'codicon-window', label: 'Recent Projects...', cmd: 'workbench.action.openRecent' },
+					{ icon: 'codicon-window', label: localize('sidexRecentProjects', 'Recent Projects...'), cmd: 'workbench.action.openRecent' },
 					{ separator: true },
-					{ icon: 'codicon-empty-window', label: 'New Window', cmd: 'workbench.action.newWindow' },
-					{ icon: 'codicon-close', label: 'Close Folder', cmd: 'workbench.action.closeFolder' },
+					{ icon: 'codicon-empty-window', label: localize('sidexNewWindow', 'New Window'), cmd: 'workbench.action.newWindow' },
+					{ icon: 'codicon-close', label: localize('sidexCloseFolder', 'Close Folder'), cmd: 'workbench.action.closeFolder' },
 				];
 
 				const cleanup = () => { popup.remove(); backdrop.remove(); };
@@ -714,7 +714,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 			centerSearchIcon.setAttribute('aria-hidden', 'true');
 			this.breadcrumbsElement = append(centerBar, $('div.sidex-breadcrumbs'));
 			const centerPlaceholder = append(centerBar, $('span.sidex-center-placeholder'));
-			centerPlaceholder.textContent = 'Search...';
+			centerPlaceholder.textContent = localize('sidexSearch', 'Search...');
 			this.updateBreadcrumbs();
 
 			this._register(addDisposableListener(centerBar, EventType.CLICK, () => {
@@ -822,27 +822,27 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 						SidexSettingsPanel.getInstance().toggle();
 					}).catch(() => { /* panel is optional */ });
 				};
-				actions.push(toAction({ id: 'sidex.profile.settings', label: 'SideX Settings', run: openSidexSettings }));
-				actions.push(toAction({ id: 'sidex.profile.usage', label: 'SideX Usage', run: openSidexSettings }));
+				actions.push(toAction({ id: 'sidex.profile.settings', label: localize('sidexSettings', 'SideX Settings'), run: openSidexSettings }));
+				actions.push(toAction({ id: 'sidex.profile.usage', label: localize('sidexUsage', 'SideX Usage'), run: openSidexSettings }));
 
 				actions.push(new Separator());
 
 				// Group 2: Editor Settings
-				actions.push(toAction({ id: 'sidex.manage.settings', label: 'Editor Settings', run: () => this.commandService.executeCommand('workbench.action.openSettings') }));
-				actions.push(toAction({ id: 'sidex.manage.commandPalette', label: 'Command Palette...', run: () => this.commandService.executeCommand('workbench.action.showCommands') }));
-				actions.push(toAction({ id: 'sidex.manage.keybindings', label: 'Open Keyboard Shortcuts [⌘K ⌘S]', run: () => this.commandService.executeCommand('workbench.action.openGlobalKeybindings') }));
-				actions.push(toAction({ id: 'sidex.manage.extensions', label: 'Extensions', run: () => this.commandService.executeCommand('workbench.view.extensions') }));
-				actions.push(toAction({ id: 'sidex.manage.snippets', label: 'Configure Snippets', run: () => this.commandService.executeCommand('workbench.action.openSnippets') }));
-				actions.push(toAction({ id: 'sidex.manage.tasks', label: 'Tasks', run: () => this.commandService.executeCommand('workbench.action.tasks.runTask') }));
-				actions.push(toAction({ id: 'sidex.manage.themes', label: 'Themes', run: () => this.commandService.executeCommand('workbench.action.selectTheme') }));
+				actions.push(toAction({ id: 'sidex.manage.settings', label: localize('sidexEditorSettings', 'Editor Settings'), run: () => this.commandService.executeCommand('workbench.action.openSettings') }));
+				actions.push(toAction({ id: 'sidex.manage.commandPalette', label: localize('sidexCommandPalette', 'Command Palette...'), run: () => this.commandService.executeCommand('workbench.action.showCommands') }));
+				actions.push(toAction({ id: 'sidex.manage.keybindings', label: localize('sidexKeyboardShortcuts', 'Open Keyboard Shortcuts [⌘K ⌘S]'), run: () => this.commandService.executeCommand('workbench.action.openGlobalKeybindings') }));
+				actions.push(toAction({ id: 'sidex.manage.extensions', label: localize('sidexExtensions', 'Extensions'), run: () => this.commandService.executeCommand('workbench.view.extensions') }));
+				actions.push(toAction({ id: 'sidex.manage.snippets', label: localize('sidexConfigureSnippets', 'Configure Snippets'), run: () => this.commandService.executeCommand('workbench.action.openSnippets') }));
+				actions.push(toAction({ id: 'sidex.manage.tasks', label: localize('sidexTasks', 'Tasks'), run: () => this.commandService.executeCommand('workbench.action.tasks.runTask') }));
+				actions.push(toAction({ id: 'sidex.manage.themes', label: localize('sidexThemes', 'Themes'), run: () => this.commandService.executeCommand('workbench.action.selectTheme') }));
 
 				actions.push(new Separator());
 
 				// Group 3: Help / Info
-				actions.push(toAction({ id: 'sidex.manage.updates', label: 'Check for Updates...', run: () => this.updateService.checkForUpdates(true) }));
+				actions.push(toAction({ id: 'sidex.manage.updates', label: localize('sidexCheckForUpdates', 'Check for Updates...'), run: () => this.updateService.checkForUpdates(true) }));
 				// docs.sidex.dev does not resolve; the README is the actual docs entry point until a docs site exists.
-				actions.push(toAction({ id: 'sidex.manage.docs', label: 'Docs', run: () => this.commandService.executeCommand('vscode.open', URI.parse('https://github.com/Sidenai/sidex#readme')) }));
-				actions.push(toAction({ id: 'sidex.manage.community', label: 'Join the Community', run: () => this.commandService.executeCommand('vscode.open', URI.parse('https://discord.gg/8CUCnEAC4J')) }));
+				actions.push(toAction({ id: 'sidex.manage.docs', label: localize('sidexDocs', 'Docs'), run: () => this.commandService.executeCommand('vscode.open', URI.parse('https://github.com/Sidenai/sidex#readme')) }));
+				actions.push(toAction({ id: 'sidex.manage.community', label: localize('sidexCommunity', 'Join the Community'), run: () => this.commandService.executeCommand('vscode.open', URI.parse('https://discord.gg/8CUCnEAC4J')) }));
 
 				this.contextMenuService.showContextMenu({
 					getAnchor: () => profileButton,

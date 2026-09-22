@@ -3,6 +3,7 @@
  *  Renders using VS Code settings-editor row structure for 1:1 parity.
  *--------------------------------------------------------------------------------------------*/
 
+import * as nls from '../../../../../../nls.js';
 import type { SettingsSection } from '../sidexSettingsPanel.js';
 import { createCustomDropdown } from '../sidexSettingsStyles.js';
 import { setLocalServerEnabled } from '../../localServer.js';
@@ -47,15 +48,15 @@ export class GeneralSection implements SettingsSection {
 			await this._loadModelOptions();
 		}
 
-		this._createSectionTitle(container, 'General');
+		this._createSectionTitle(container, nls.localize('sidexSettingsGeneral', 'General'));
 
 		const card = this._createCard(container);
 
 		// 1. Built-in SideX agent
 		this._addToggleRow(
 			card,
-			'Enable built-in SideX agent',
-			'Run SideX’s local agent server. This does not affect external or system agents.',
+			nls.localize('sidexBuiltInAgent', 'Enable built-in SideX agent'),
+			nls.localize('sidexBuiltInAgentDescription', 'Run SideX’s local agent server. This does not affect external or system agents.'),
 			'sidex.agent.enabled',
 			this._agentEnabled
 		);
@@ -66,12 +67,12 @@ export class GeneralSection implements SettingsSection {
 		// 3. Default Agent Mode
 		this._addSelectRow(
 			card,
-			'Default Agent Mode',
-			'Set the default agent capability when starting a new workspace task.',
+			nls.localize('sidexDefaultAgentMode', 'Default Agent Mode'),
+			nls.localize('sidexDefaultAgentModeDescription', 'Set the default agent capability when starting a new workspace task.'),
 			[
-				{ value: 'agent', label: 'Agent' },
-				{ value: 'plan', label: 'Plan' },
-				{ value: 'ask', label: 'Ask' }
+				{ value: 'agent', label: nls.localize('sidexAgentMode', 'Agent') },
+				{ value: 'plan', label: nls.localize('sidexPlanMode', 'Plan') },
+				{ value: 'ask', label: nls.localize('sidexAskMode', 'Ask') }
 			],
 			this._getSetting('defaultAgent', 'agent') as string,
 			'sidex.general.defaultAgent'
@@ -80,8 +81,8 @@ export class GeneralSection implements SettingsSection {
 		// 4. Auto Scroll
 		this._addToggleRow(
 			card,
-			'Auto scroll on message',
-			'Automatically scroll the conversation viewport down when a new message is received.',
+			nls.localize('sidexAutoScroll', 'Auto scroll on message'),
+			nls.localize('sidexAutoScrollDescription', 'Automatically scroll the conversation viewport down when a new message is received.'),
 			'sidex.general.autoScroll',
 			this._getSetting('autoScroll', true) as boolean
 		);
@@ -214,7 +215,7 @@ export class GeneralSection implements SettingsSection {
 		if (this._modelOptions.length === 0) {
 			// Nothing to default to until the user adds a model — a dropdown
 			// with no real entries would look broken rather than empty.
-			const row = this._createRow(card, 'Default AI Model', 'Add a model in the Models section to set a default for new conversations.');
+			const row = this._createRow(card, nls.localize('sidexDefaultModel', 'Default AI Model'), nls.localize('sidexDefaultModelEmptyDescription', 'Add a model in the Models section to set a default for new conversations.'));
 			this._addButton(row, 'Configure Models', () => {
 				window.dispatchEvent(new CustomEvent('sidex-settings-navigate', { detail: 'models' }));
 			});
@@ -224,11 +225,11 @@ export class GeneralSection implements SettingsSection {
 		// A blank saved value means "no override" — represent that as its own
 		// option instead of silently defaulting the dropdown to whichever
 		// model happens to be first, which would look chosen without being saved.
-		const options: ModelOption[] = [{ value: '', label: 'No default (use first available)' }, ...this._modelOptions];
+		const options: ModelOption[] = [{ value: '', label: nls.localize('sidexNoDefaultModel', 'No default (use first available)') }, ...this._modelOptions];
 		this._addSelectRow(
 			card,
-			'Default AI Model',
-			'Select which AI model new conversations will start with by default.',
+			nls.localize('sidexDefaultModel', 'Default AI Model'),
+			nls.localize('sidexDefaultModelDescription', 'Select which AI model new conversations will start with by default.'),
 			options,
 			this._getSetting('defaultModel', '') as string,
 			'sidex.general.defaultModel'
