@@ -56,15 +56,12 @@ export class ConfigurationSection implements SettingsSection {
 				const data = await this._invoke('settings_get', { section: 'sidex.cascade' }) as SettingsData | null;
 				if (data) {
 					this._settings = data;
-					if (typeof data.allowedOrigins === 'string') {
-						this._origins = JSON.parse(data.allowedOrigins as string);
-					}
-					if (typeof data.allowList === 'string') {
-						this._allowList = JSON.parse(data.allowList as string);
-					}
-					if (typeof data.denyList === 'string') {
-						this._denyList = JSON.parse(data.denyList as string);
-					}
+					const origins = this._parseStringList(data.allowedOrigins);
+					if (origins) { this._origins = origins; }
+					const allowList = this._parseStringList(data.allowList);
+					if (allowList) { this._allowList = allowList; }
+					const denyList = this._parseStringList(data.denyList);
+					if (denyList) { this._denyList = denyList; }
 				}
 			} catch { /* use defaults */ }
 		}
@@ -115,9 +112,22 @@ export class ConfigurationSection implements SettingsSection {
 		return this._settings[key] ?? defaultValue;
 	}
 
+	private _parseStringList(value: unknown): string[] | null {
+		let parsed = value;
+		if (typeof parsed === 'string') {
+			try {
+				parsed = JSON.parse(parsed);
+			} catch {
+				return null;
+			}
+		}
+
+		return Array.isArray(parsed) && parsed.every(item => typeof item === 'string') ? parsed : null;
+	}
+
 	private _saveLists(key: string, value: string[]): void {
 		if (this._invoke) {
-			this._invoke('settings_update', { key: `sidex.cascade.${key}`, value: JSON.stringify(value), scope: 'user' }).catch(() => {});
+			this._invoke('settings_update', { key: `sidex.cascade.${key}`, value, scope: 'user' }).catch(() => {});
 		}
 	}
 

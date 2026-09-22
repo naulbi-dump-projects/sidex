@@ -33,7 +33,7 @@ export class GeneralSection implements SettingsSection {
 		if (this._invoke) {
 			try {
 				const data = await this._invoke('settings_get', { section: 'sidex.general' }) as SettingsData | null;
-				if (data) { this._settings = data; }
+				if (data) { this._settings = this._parseStoredSettings(data); }
 			} catch { /* use defaults */ }
 			await this._loadModelOptions();
 		}
@@ -107,7 +107,7 @@ export class GeneralSection implements SettingsSection {
 		const resetRow = this._createRow(card, 'Reset Don\'t Ask Again Dialogs', 'Show previously dismissed dialogs');
 		this._addButton(resetRow, 'Show', () => {
 			if (this._invoke) {
-				this._invoke('settings_update', { key: 'sidex.general.dismissedDialogs', value: JSON.stringify({}), scope: 'user' }).then(() => {
+				this._invoke('settings_update', { key: 'sidex.general.dismissedDialogs', value: {}, scope: 'user' }).then(() => {
 					this._showToast('All dialogs have been reset.');
 				}).catch(() => {});
 			}
@@ -223,9 +223,27 @@ export class GeneralSection implements SettingsSection {
 		return this._settings[key] ?? defaultValue;
 	}
 
+	private _parseStoredSettings(data: SettingsData): SettingsData {
+		return Object.fromEntries(
+			Object.entries(data).map(([key, value]) => [key, this._parseStoredValue(value)])
+		);
+	}
+
+	private _parseStoredValue(value: unknown): unknown {
+		if (typeof value !== 'string') {
+			return value;
+		}
+
+		try {
+			return JSON.parse(value);
+		} catch {
+			return value;
+		}
+	}
+
 	private _saveSetting(key: string, value: unknown): void {
 		if (!this._invoke) { return; }
-		this._invoke('settings_update', { key, value: JSON.stringify(value), scope: 'user' }).then(() => {
+		this._invoke('settings_update', { key, value, scope: 'user' }).then(() => {
 			window.dispatchEvent(new CustomEvent('sidex-settings-changed'));
 		}).catch(() => {});
 	}

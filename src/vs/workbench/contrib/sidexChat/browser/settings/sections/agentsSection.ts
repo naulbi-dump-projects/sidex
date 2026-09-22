@@ -29,7 +29,7 @@ export class AgentsSection implements SettingsSection {
 		if (this._invoke) {
 			try {
 				const data = await this._invoke('settings_get', { section: 'sidex.agents' }) as SettingsData | null;
-				if (data) { this._settings = data; }
+				if (data) { this._settings = this._parseStoredSettings(data); }
 			} catch { /* use defaults */ }
 			await this._loadModelOptions();
 		}
@@ -200,9 +200,27 @@ export class AgentsSection implements SettingsSection {
 		return this._settings[key] ?? defaultValue;
 	}
 
+	private _parseStoredSettings(data: SettingsData): SettingsData {
+		return Object.fromEntries(
+			Object.entries(data).map(([key, value]) => [key, this._parseStoredValue(value)])
+		);
+	}
+
+	private _parseStoredValue(value: unknown): unknown {
+		if (typeof value !== 'string') {
+			return value;
+		}
+
+		try {
+			return JSON.parse(value);
+		} catch {
+			return value;
+		}
+	}
+
 	private _saveSetting(key: string, value: unknown): void {
 		if (!this._invoke) { return; }
-		this._invoke('settings_update', { key, value: JSON.stringify(value), scope: 'user' }).catch(() => {});
+		this._invoke('settings_update', { key, value, scope: 'user' }).catch(() => {});
 	}
 
 	private _createCard(parent: HTMLElement): HTMLElement {

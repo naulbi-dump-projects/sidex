@@ -93,7 +93,16 @@ pub fn settings_get(
     let settings = state.inner.read().map_err(|e| e.to_string())?;
 
     if let Some(key) = section {
-        return Ok(settings.get_raw(&key).cloned().unwrap_or(Value::Null));
+        if let Some(value) = settings.get_raw(&key) {
+            return Ok(value.clone());
+        }
+
+        let section = settings.get_section(&key);
+        return if section.as_object().is_some_and(|values| values.is_empty()) {
+            Ok(Value::Null)
+        } else {
+            Ok(section)
+        };
     }
 
     match scope.as_deref() {

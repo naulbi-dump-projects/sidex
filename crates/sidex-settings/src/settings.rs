@@ -89,6 +89,30 @@ impl Settings {
             .or_else(|| Self::lookup(&self.default_layer, key))
     }
 
+    /// Get the effective direct children of a dot-separated settings section.
+    ///
+    /// Settings are stored as flat keys, so querying `sidex.general` returns
+    /// an object built from keys such as `sidex.general.autoScroll`. Values
+    /// from higher-priority layers replace values from lower-priority layers.
+    pub fn get_section(&self, section: &str) -> Value {
+        let prefix = format!("{section}.");
+        let mut values = serde_json::Map::new();
+
+        for layer in [&self.default_layer, &self.user_layer, &self.workspace_layer] {
+            let Some(layer) = layer.as_object() else {
+                continue;
+            };
+
+            for (key, value) in layer {
+                if let Some(child_key) = key.strip_prefix(&prefix) {
+                    values.insert(child_key.to_owned(), value.clone());
+                }
+            }
+        }
+
+        Value::Object(values)
+    }
+
     /// Get the entire user layer as a JSON value.
     pub fn user_layer(&self) -> &Value {
         &self.user_layer
@@ -251,5 +275,22 @@ mod tests {
         let s = Settings::new();
         let theme: String = s.get("workbench.colorTheme").unwrap();
         assert_eq!(theme, "Default Dark+");
+    }
+
+    #[test]
+    fn section_merges_flat_keys_by_layer_priority() {
+        let mut s = Settings::new();
+        s.set("sidex.general.autoScroll", json!(false));
+        s.set("sidex.general.defaultAgent", json!("plan"));
+        s.set("sidex.agents.textSize", json!("Large"));
+        s.set_workspace("sidex.general.autoScroll", json!(true));
+
+        assert_eq!(
+            s.get_section("sidex.general"),
+            json!({
+                "autoScroll": true,
+                "defaultAgent": "plan"
+            })
+        );
     }
 }
