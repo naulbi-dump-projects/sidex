@@ -98,18 +98,21 @@ export class SidexSettingsPanel extends Disposable {
 		this._resizable = resizable;
 
 		const layoutResizable = () => {
+			const titlebarHeight = document.querySelector('.part.titlebar')?.getBoundingClientRect().height || 32;
+			this._overlay.style.top = `${titlebarHeight}px`;
+			this._overlay.style.bottom = '0';
+			this._overlay.style.height = 'auto';
+
 			if (this._isMaximized) {
 				resizable.style.cssText = `position:absolute;width:100%;height:100%;left:0;top:0;`;
 				return;
 			}
 			const cw = window.innerWidth;
-			const ch = window.innerHeight;
-			const titleBarOffset = 30;
-			const availableHeight = ch - titleBarOffset;
+			const availableHeight = window.innerHeight - titlebarHeight;
 			const width = Math.min(cw * 0.8, 1400, cw);
 			const height = Math.min(availableHeight * 0.8, 900, availableHeight);
 			const left = (cw - width) / 2;
-			const top = Math.max(titleBarOffset, (ch - height) / 2);
+			const top = Math.max(0, (availableHeight - height) / 2);
 			resizable.style.cssText = `position:absolute;width:${width}px;height:${height}px;left:${left}px;top:${top}px;`;
 		};
 		this._layoutResizable = layoutResizable;
@@ -713,6 +716,7 @@ export class SidexSettingsPanel extends Disposable {
 		this._renderAccount();
 		this._renderSection();
 		this._overlay.style.display = '';
+		this._layoutResizable();
 	}
 
 	close(): void {

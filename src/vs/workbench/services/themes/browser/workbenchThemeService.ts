@@ -69,8 +69,6 @@ import { getColorRegistry } from '../../../../platform/theme/common/colorRegistr
 import { ILanguageService } from '../../../../editor/common/languages/language.js';
 import { mainWindow } from '../../../../base/browser/window.js';
 import { generateColorThemeCSS } from './colorThemeCss.js';
-import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
 
 // implementation
 
@@ -175,9 +173,7 @@ export class WorkbenchThemeService extends Disposable implements IWorkbenchTheme
 		@ILogService private readonly logService: ILogService,
 		@IHostColorSchemeService private readonly hostColorService: IHostColorSchemeService,
 		@IUserDataInitializationService private readonly userDataInitializationService: IUserDataInitializationService,
-		@ILanguageService private readonly languageService: ILanguageService,
-		@INotificationService private readonly notificationService: INotificationService,
-		@ICommandService private readonly commandService: ICommandService
+		@ILanguageService private readonly languageService: ILanguageService
 	) {
 		super();
 		this.container = layoutService.mainContainer;
@@ -351,41 +347,7 @@ export class WorkbenchThemeService extends Disposable implements IWorkbenchTheme
 		this.migrateColorThemeSettings();
 		await this.migrateAutoDetectColorScheme();
 		const result = await Promise.all([initializeColorTheme(), initializeFileIconTheme(), initializeProductIconTheme()]);
-		this.showNewDefaultThemeNotification();
 		return result;
-	}
-
-	private static readonly NEW_THEME_NOTIFICATION_KEY = 'workbench.newDefaultThemeNotification';
-
-	private showNewDefaultThemeNotification(): void {
-		const newDefaultThemes = new Set([ThemeSettingDefaults.COLOR_THEME_DARK, ThemeSettingDefaults.COLOR_THEME_LIGHT]);
-		if (newDefaultThemes.has(this.currentColorTheme.settingsId)) {
-			return; // already using a new default theme
-		}
-		if (this.storageService.getBoolean(WorkbenchThemeService.NEW_THEME_NOTIFICATION_KEY, StorageScope.APPLICATION)) {
-			return; // already shown
-		}
-
-		const handle = this.notificationService.prompt(
-			Severity.Info,
-			nls.localize('newDefaultTheme', 'New default themes are available for VS Code.'),
-			[
-				{
-					label: nls.localize('tryNewTheme', 'Try Them Out'),
-					run: () => this.commandService.executeCommand('workbench.action.tryNewDefaultThemes')
-				}
-			]
-		);
-		this._register(
-			Event.once(handle.onDidClose)(() => {
-				this.storageService.store(
-					WorkbenchThemeService.NEW_THEME_NOTIFICATION_KEY,
-					true,
-					StorageScope.APPLICATION,
-					StorageTarget.USER
-				);
-			})
-		);
 	}
 
 	/**

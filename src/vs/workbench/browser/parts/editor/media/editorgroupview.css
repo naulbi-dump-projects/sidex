@@ -136,7 +136,7 @@
 	justify-content: space-between;
 	margin: 3px 0;
 	cursor: default;
-	color: #303030;
+	color: var(--vscode-editor-foreground, var(--vscode-foreground));
 	font-size: 12px;
 }
 
@@ -150,13 +150,13 @@
 
 .monaco-workbench .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dt {
 	letter-spacing: 0.04em;
-	color: #303030;
+	color: var(--vscode-editor-foreground, var(--vscode-foreground));
 }
 
 .monaco-workbench .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dd {
 	text-align: left;
 	margin-inline-start: 24px;
-	color: #404040;
+	color: var(--vscode-descriptionForeground, var(--vscode-editor-foreground, var(--vscode-foreground)));
 }
 
 /* Title */

@@ -240,7 +240,6 @@ async function boot() {
 	setupTauriExternalOpener();
 	setupMenuActions();
 	setupWindowStateSave();
-	setupNativeWindowDragging();
 	setupWindowsEditorNewlineKeybindings();
 	updateNativeMenuLabels();
 
@@ -280,36 +279,6 @@ function setupWindowStateSave() {
 			});
 		})
 		.catch(() => {});
-}
-
-const TITLEBAR_NO_DRAG_SELECTOR =
-	'a, button, input, select, textarea, [contenteditable="true"], [draggable="true"], ' +
-	'.action-item, .command-center, .window-controls-container, .window-icon, ' +
-	'.menubar, .monaco-menu, .monaco-action-bar, .window-title, .action-toolbar-container, ' +
-	'.center-adjacent-toolbar-container, .tabs-container, .tab, .monaco-list, .pane-header, ' +
-	'.composite.title, .split-view-view, .editor-group-container';
-
-function setupNativeWindowDragging() {
-	let appWindow: { startDragging(): Promise<void> } | null = null;
-	import('@tauri-apps/api/window')
-		.then(mod => {
-			appWindow = mod.getCurrentWindow();
-		})
-		.catch(() => {});
-
-	document.addEventListener('mousedown', (e: MouseEvent) => {
-		if (e.button !== 0 || e.defaultPrevented || !appWindow) {
-			return;
-		}
-		const target = e.target as HTMLElement | null;
-		if (!target?.closest('.part.titlebar')) {
-			return;
-		}
-		if (target.closest(TITLEBAR_NO_DRAG_SELECTOR)) {
-			return;
-		}
-		appWindow.startDragging().catch(() => {});
-	});
 }
 
 function setupWindowsEditorNewlineKeybindings() {

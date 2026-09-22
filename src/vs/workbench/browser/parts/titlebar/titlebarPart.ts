@@ -584,14 +584,26 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 		if ((globalThis as any).__SIDEX_TAURI__) {
 			this.dragRegion.style.setProperty('-webkit-app-region', 'no-drag');
 			// this.dragRegion.style.pointerEvents = 'none';
+			const isDraggableTarget = (target: EventTarget | null): boolean => {
+				if (!(target instanceof HTMLElement)) {
+					return false;
+				}
+
+				return !target.closest(
+					'a, button, input, select, textarea, [contenteditable="true"], [draggable="true"], ' +
+						'.action-item, .command-center, .window-controls-container, .window-icon, ' +
+						'.menubar, .monaco-menu, .monaco-action-bar, .window-title, .action-toolbar-container, ' +
+						'.center-adjacent-toolbar-container, .sidex-project-name, .sidex-branch-container, ' +
+						'.sidex-center-bar, .sidex-profile-button'
+				);
+			};
 
 			this._register(
 				addDisposableListener(this.rootContainer, EventType.MOUSE_DOWN, e => {
-					const target = e.target as HTMLElement;
-					if (target === this.dragRegion || target === this.rootContainer) {
+					if (e.button === 0 && isDraggableTarget(e.target)) {
 						e.preventDefault();
 						import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-							getCurrentWindow().startDragging();
+							getCurrentWindow().startDragging().catch(() => undefined);
 						});
 					}
 				})
@@ -599,11 +611,10 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 
 			this._register(
 				addDisposableListener(this.rootContainer, EventType.DBLCLICK, e => {
-					const target = e.target as HTMLElement;
-					if (target === this.dragRegion || target === this.rootContainer) {
+					if (isDraggableTarget(e.target)) {
 						e.preventDefault();
 						import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-							getCurrentWindow().toggleMaximize();
+							getCurrentWindow().toggleMaximize().catch(() => undefined);
 						});
 					}
 				})
@@ -625,6 +636,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 		try {
 			this.projectNameElement = append(this.leftContent, $('div.sidex-project-name'));
 			const branchContainer = append(this.leftContent, $('div.sidex-branch-container'));
+			branchContainer.style.display = 'none';
 			const branchIcon = append(branchContainer, $('span.sidex-branch-icon.codicon.codicon-source-control'));
 			branchIcon.setAttribute('aria-hidden', 'true');
 			this.branchElement = append(branchContainer, $('span.sidex-branch-name'));
