@@ -25,9 +25,11 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use serde::Serialize;
+use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 use crate::commands::providers;
+use crate::commands::settings::SettingsStore;
 use crate::commands::secrets::SecretsStore;
 
 /// How long to wait for the server to answer `/v1/health` before giving up.
@@ -69,6 +71,9 @@ struct ServerProc {
     /// has been superseded — a manual restart, or app shutdown — and stand
     /// down instead of racing the new attempt for the child slot.
     generation: u64,
+    /// Whether SideX's bundled local agent is enabled. This is intentionally
+    /// separate from any external or system agent configuration.
+    enabled: bool,
 }
 
 pub struct LocalServer {
@@ -83,6 +88,7 @@ impl LocalServer {
                 port: 0,
                 error: None,
                 generation: 0,
+                enabled: true,
             }),
         }
     }
@@ -96,6 +102,10 @@ impl LocalServer {
 
     pub fn port(&self) -> u16 {
         self.with_proc(|p| p.port)
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        self.with_proc(|p| p.enabled)
     }
 
     /// True while we hold a child and the OS confirms it's still alive,
@@ -123,6 +133,7 @@ impl LocalServer {
                 http_url: format!("http://127.0.0.1:{}", p.port),
                 port: p.port,
                 running,
+                enabled: p.enabled,
                 error: p.error.clone(),
             }
         })
@@ -178,6 +189,15 @@ impl LocalServer {
             }
         });
     }
+
+    /// Disable only the bundled SideX server and stop any supervised child.
+    pub fn disable(&self) {
+        self.shutdown();
+        self.with_proc(|p| {
+            p.enabled = false;
+            p.error = None;
+        });
+    }
 }
 
 impl Drop for LocalServer {
@@ -193,6 +213,8 @@ pub struct ServerEndpoint {
     pub http_url: String,
     pub port: u16,
     pub running: bool,
+    /// Whether SideX's bundled local agent is enabled.
+    pub enabled: bool,
     /// Set when the server is not running and we know why. `None` while
     /// healthy, or before the first spawn attempt has reported back.
     pub error: Option<String>,
@@ -519,13 +541,47 @@ fn run_supervised(
     }
 }
 
+/// Whether the bundled SideX agent should run. Invalid legacy values fall
+/// back to the safe default: enabled.
+fn agent_enabled(app: &AppHandle) -> bool {
+    let Some(settings) = app.try_state::<Arc<SettingsStore>>() else {
+        return true;
+    };
+    let Ok(settings) = settings.inner.read() else {
+        return true;
+    };
+    settings
+        .get_raw("sidex.agent.enabled")
+        .and_then(parse_enabled_setting)
+        .unwrap_or(true)
+}
+
+fn parse_enabled_setting(value: &Value) -> Option<bool> {
+    value
+        .as_bool()
+        .or_else(|| value.as_str().and_then(|value| value.parse().ok()))
+}
+
 /// Spawn the server process and record it on `server`.
 ///
 /// A failure here is not fatal: the editor is fully usable without the agent,
 /// so the error is recorded on `ServerProc::error` (surfaced to the UI via
 /// `server_endpoint`) and logged, rather than blocking startup.
 fn start(app: &AppHandle, server: &Arc<LocalServer>) {
-    server.with_proc(|p| p.error = None);
+    if !agent_enabled(app) {
+        server.disable();
+        log::info!("[sidex-server] bundled SideX agent is disabled");
+        return;
+    }
+
+    // Claim the generation before work that can take time. A concurrent disable
+    // then supersedes this attempt before it can register a child.
+    let generation = server.with_proc(|p| {
+        p.generation = p.generation.wrapping_add(1);
+        p.enabled = true;
+        p.error = None;
+        p.generation
+    });
 
     let Some(bin) = find_server_binary(app) else {
         let msg = "sidex-server binary not found. Build it with `cd sidexai/sidex-server && \
@@ -533,7 +589,11 @@ fn start(app: &AppHandle, server: &Arc<LocalServer>) {
                     to point at an existing build."
             .to_string();
         log::warn!("[sidex-server] {msg}");
-        server.with_proc(|p| p.error = Some(msg));
+        server.with_proc(|p| {
+            if p.generation == generation {
+                p.error = Some(msg);
+            }
+        });
         return;
     };
 
@@ -550,7 +610,11 @@ fn start(app: &AppHandle, server: &Arc<LocalServer>) {
             Ok(p) => p,
             Err(e) => {
                 log::error!("[sidex-server] could not reserve a port: {e}");
-                server.with_proc(|p| p.error = Some(format!("could not reserve a port: {e}")));
+                server.with_proc(|p| {
+                    if p.generation == generation {
+                        p.error = Some(format!("could not reserve a port: {e}"));
+                    }
+                });
                 return;
             }
         }
@@ -562,7 +626,6 @@ fn start(app: &AppHandle, server: &Arc<LocalServer>) {
         providers::server_env(&store)
     };
 
-    let generation = server.bump_generation();
     let server = Arc::clone(server);
     // Off-thread so the window still paints while we spawn, retry and wait
     // out the health check (up to `STARTUP_TIMEOUT` per attempt).
@@ -576,6 +639,28 @@ pub fn initialize(app: &AppHandle) {
     start(app, &server);
 }
 
+/// Synchronize the bundled SideX server with `sidex.agent.enabled`.
+///
+/// The setting controls this child process only; it does not discover, stop or
+/// reconfigure system agents or externally-run servers.
+pub fn sync_enabled_from_settings(app: &AppHandle) -> Result<ServerEndpoint, String> {
+    let server = app
+        .try_state::<Arc<LocalServer>>()
+        .ok_or("local server is not initialized")?
+        .inner()
+        .clone();
+
+    if agent_enabled(app) {
+        if !server.is_enabled() {
+            start(app, &server);
+        }
+    } else {
+        server.disable();
+    }
+
+    Ok(server.endpoint())
+}
+
 /// Restart the server so newly-saved provider credentials take effect.
 #[tauri::command]
 pub fn server_restart(app: AppHandle) -> Result<ServerEndpoint, String> {
@@ -584,6 +669,12 @@ pub fn server_restart(app: AppHandle) -> Result<ServerEndpoint, String> {
         .ok_or("local server is not initialized")?
         .inner()
         .clone();
+
+    if !agent_enabled(&app) {
+        server.disable();
+        return Ok(server.endpoint());
+    }
+
     server.shutdown();
     start(&app, &server);
     Ok(server.endpoint())
@@ -653,6 +744,32 @@ mod tests {
         assert_eq!(ep.port, 4242);
         assert_eq!(ep.ws_url, "ws://127.0.0.1:4242");
         assert_eq!(ep.http_url, "http://127.0.0.1:4242");
+    }
+
+    #[test]
+    fn disable_marks_the_bundled_agent_stopped_without_losing_its_endpoint() {
+        let server = LocalServer::new();
+        let child = spawn_long_lived();
+        server.with_proc(|p| {
+            p.port = 4242;
+            p.child = Some(child);
+        });
+
+        server.disable();
+
+        let endpoint = server.endpoint();
+        assert!(!endpoint.enabled);
+        assert!(!endpoint.running);
+        assert_eq!(endpoint.port, 4242);
+        assert!(endpoint.error.is_none());
+    }
+
+    #[test]
+    fn enabled_setting_accepts_native_and_legacy_boolean_values() {
+        assert_eq!(parse_enabled_setting(&Value::Bool(true)), Some(true));
+        assert_eq!(parse_enabled_setting(&Value::String("false".to_string())), Some(false));
+        assert_eq!(parse_enabled_setting(&Value::String("not a boolean".to_string())), None);
+        assert_eq!(parse_enabled_setting(&Value::Null), None);
     }
 
     #[test]

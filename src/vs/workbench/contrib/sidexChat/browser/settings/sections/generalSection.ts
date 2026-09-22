@@ -5,6 +5,7 @@
 
 import type { SettingsSection } from '../sidexSettingsPanel.js';
 import { createCustomDropdown } from '../sidexSettingsStyles.js';
+import { setLocalServerEnabled } from '../../localServer.js';
 
 type TauriInvoke = ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null;
 
@@ -21,6 +22,7 @@ export class GeneralSection implements SettingsSection {
 	private _container: HTMLElement | null = null;
 	private _invoke: TauriInvoke;
 	private _settings: SettingsData = {};
+	private _agentEnabled: boolean = true;
 	private _modelOptions: ModelOption[] = [];
 
 	constructor(invoke: TauriInvoke) {
@@ -32,8 +34,15 @@ export class GeneralSection implements SettingsSection {
 
 		if (this._invoke) {
 			try {
-				const data = await this._invoke('settings_get', { section: 'sidex.general' }) as SettingsData | null;
-				if (data) { this._settings = this._parseStoredSettings(data); }
+				const [general, agent] = await Promise.all([
+					this._invoke('settings_get', { section: 'sidex.general' }),
+					this._invoke('settings_get', { section: 'sidex.agent' })
+				]);
+				if (general) { this._settings = this._parseStoredSettings(general as SettingsData); }
+				if (agent) {
+					const agentSettings = this._parseStoredSettings(agent as SettingsData);
+					this._agentEnabled = agentSettings.enabled !== false;
+				}
 			} catch { /* use defaults */ }
 			await this._loadModelOptions();
 		}
@@ -42,10 +51,19 @@ export class GeneralSection implements SettingsSection {
 
 		const card = this._createCard(container);
 
-		// 1. Default Model
+		// 1. Built-in SideX agent
+		this._addToggleRow(
+			card,
+			'Enable built-in SideX agent',
+			'Run SideX’s local agent server. This does not affect external or system agents.',
+			'sidex.agent.enabled',
+			this._agentEnabled
+		);
+
+		// 2. Default Model
 		this._addDefaultModelRow(card);
 
-		// 2. Default Agent Mode
+		// 3. Default Agent Mode
 		this._addSelectRow(
 			card,
 			'Default Agent Mode',
@@ -59,7 +77,7 @@ export class GeneralSection implements SettingsSection {
 			'sidex.general.defaultAgent'
 		);
 
-		// 3. Auto Scroll
+		// 4. Auto Scroll
 		this._addToggleRow(
 			card,
 			'Auto scroll on message',
@@ -244,6 +262,9 @@ export class GeneralSection implements SettingsSection {
 	private _saveSetting(key: string, value: unknown): void {
 		if (!this._invoke) { return; }
 		this._invoke('settings_update', { key, value, scope: 'user' }).then(() => {
+			if (key === 'sidex.agent.enabled' && typeof value === 'boolean') {
+				setLocalServerEnabled(value);
+			}
 			window.dispatchEvent(new CustomEvent('sidex-settings-changed'));
 		}).catch(() => {});
 	}

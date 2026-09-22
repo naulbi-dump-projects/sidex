@@ -22,6 +22,7 @@ pub fn builtin_defaults() -> Value {
     add_breadcrumb_defaults(&mut m);
     add_output_defaults(&mut m);
     add_notebook_defaults(&mut m);
+    add_sidex_defaults(&mut m);
     add_language_specific_defaults(&mut m);
     Value::Object(m)
 }
@@ -621,6 +622,12 @@ fn add_notebook_defaults(m: &mut Map<String, Value>) {
     ins(m, "notebook.insertToolbarLocation", json!("both"));
     ins(m, "notebook.undoRedoPerCell", json!(true));
     ins(m, "notebook.output.textLineLimit", json!(30));
+}
+
+fn add_sidex_defaults(m: &mut Map<String, Value>) {
+    // Controls only SideX's bundled loopback agent server. It must never
+    // affect external/system agents configured elsewhere in the workbench.
+    ins(m, "sidex.agent.enabled", json!(true));
 }
 
 #[allow(clippy::too_many_lines)]

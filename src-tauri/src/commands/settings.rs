@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 
 use serde_json::Value;
 use sidex_settings::{modify_jsonc, parse_jsonc, Settings};
-use tauri::State;
+use tauri::{AppHandle, State};
 
 pub struct SettingsStore {
     pub(crate) inner: RwLock<Settings>,
@@ -135,6 +135,7 @@ pub fn settings_get(
 #[tauri::command]
 pub fn settings_update(
     state: State<'_, Arc<SettingsStore>>,
+    app: AppHandle,
     key: String,
     value: Value,
     scope: String,
@@ -159,6 +160,16 @@ pub fn settings_update(
             log::warn!("failed to persist user settings: {e}");
         }
     }
+
+    // This setting owns SideX's bundled loopback server only. Keep the
+    // lifecycle hook here so every settings client (not only the UI toggle)
+    // applies it consistently, without touching system or external agents.
+    if key == "sidex.agent.enabled" {
+        if let Err(e) = crate::server::sync_enabled_from_settings(&app) {
+            log::warn!("failed to apply sidex.agent.enabled: {e}");
+        }
+    }
+
     Ok(())
 }
 

@@ -12,12 +12,17 @@ export interface IServerEndpoint {
 	httpUrl: string;
 	port: number;
 	running: boolean;
+	/** Whether SideX's bundled local agent is enabled. */
+	enabled?: boolean;
 	/** Why the supervisor is down, when known (missing binary, crash, …). */
 	error?: string | null;
 }
 
 /** Fired once the server has been restarted and its endpoint re-resolved. */
 export const SERVER_RESTARTED_EVENT = 'sidex-server-restarted';
+
+/** Fired after the user enables or disables SideX's bundled local agent. */
+export const SERVER_ENABLED_CHANGED_EVENT = 'sidex-server-enabled-changed';
 
 type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 
@@ -41,7 +46,8 @@ const FALLBACK: IServerEndpoint = {
 	wsUrl: 'ws://127.0.0.1:7433',
 	httpUrl: 'http://127.0.0.1:7433',
 	port: 7433,
-	running: false
+	running: false,
+	enabled: true
 };
 
 function isValidEndpoint(value: unknown): value is IServerEndpoint {
@@ -82,13 +88,27 @@ function applyEndpoint(value: unknown): void {
 		return;
 	}
 	resolved = true;
-	// A port of 0 means the supervisor hasn't reserved one yet (or lost it
-	// after a failed health check); wsUrl/httpUrl built from that are useless,
-	// so don't let it overwrite a real cached endpoint.
+	// A port of 0 means the supervisor has not reserved one yet. Preserve the
+	// last usable URLs, but still carry its confirmed stopped/disabled state so
+	// the chat client does not retry a user-disabled agent.
 	if (value.port > 0) {
 		cached = value;
-		settled = value.running;
+	} else {
+		cached = { ...cached, running: false, enabled: value.enabled, error: value.error };
 	}
+	settled = value.running && value.enabled !== false;
+}
+
+/**
+ * Update the local cache after `sidex.agent.enabled` has been persisted. This
+ * setting owns only SideX's bundled loopback server; external server overrides
+ * remain available through `sidex.chat.serverUrl`.
+ */
+export function setLocalServerEnabled(enabled: boolean): void {
+	cached = { ...cached, enabled, running: false, error: null };
+	resolved = true;
+	settled = false;
+	window.dispatchEvent(new CustomEvent<boolean>(SERVER_ENABLED_CHANGED_EVENT, { detail: enabled }));
 }
 
 /**

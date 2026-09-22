@@ -14,7 +14,7 @@ import { isCodeEditor } from '../../../../editor/browser/editorBrowser.js';
 import { LocalToolExecutor, ILocalToolRequest, LOCAL_TOOLS_SUPPORTED } from './localToolExecutor.js';
 import { SubagentRegistry, SubagentType, SUBAGENT_CONFIGS, getAllowedTools, buildSubagentPrompt } from './subagentTypes.js';
 import { IExplorerService } from '../../files/browser/files.js';
-import { resolveServerEndpoint, serverWsUrl, SERVER_RESTARTED_EVENT } from './localServer.js';
+import { getServerEndpoint, resolveServerEndpoint, serverWsUrl, SERVER_ENABLED_CHANGED_EVENT, SERVER_RESTARTED_EVENT } from './localServer.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { IUpdateService } from '../../../../platform/update/common/update.js';
 import { IRecentEditTracker } from '../../sidexComplete/browser/recentEditTracker.js';
@@ -278,6 +278,9 @@ export class SidexChatService extends Disposable implements ISidexChatService {
 		// A restart we asked for is not an outage: drop the dead socket and
 		// reconnect straight away instead of backing off.
 		const onServerRestarted = () => {
+			if (!this._usesExternalServer && getServerEndpoint().enabled === false) {
+				return;
+			}
 			this._reconnectAttempts = 0;
 			this._ws?.close();
 			this._ws = null;
@@ -286,6 +289,19 @@ export class SidexChatService extends Disposable implements ISidexChatService {
 		};
 		window.addEventListener(SERVER_RESTARTED_EVENT, onServerRestarted);
 		this._register({ dispose: () => window.removeEventListener(SERVER_RESTARTED_EVENT, onServerRestarted) });
+
+		const onServerEnabledChanged = (event: unknown) => {
+			const enabled = (event as CustomEvent<boolean>).detail;
+			if (enabled || this._usesExternalServer) {
+				this._reconnectAttempts = 0;
+				this.connect();
+				return;
+			}
+
+			this.disconnect();
+		};
+		window.addEventListener(SERVER_ENABLED_CHANGED_EVENT, onServerEnabledChanged);
+		this._register({ dispose: () => window.removeEventListener(SERVER_ENABLED_CHANGED_EVENT, onServerEnabledChanged) });
 
 		// Give the local server a moment to bind its port before connecting.
 		setTimeout(() => {
@@ -371,6 +387,10 @@ export class SidexChatService extends Disposable implements ISidexChatService {
 		return serverWsUrl(this.configurationService.getValue<string>('sidex.chat.serverUrl'));
 	}
 
+	private get _usesExternalServer(): boolean {
+		return !!this.configurationService.getValue<string>('sidex.chat.serverUrl')?.trim();
+	}
+
 	/**
 	 * Builds the /v1/stream WebSocket URL. The server listens on loopback and
 	 * serves only the local user, so no token is attached.
@@ -448,12 +468,21 @@ export class SidexChatService extends Disposable implements ISidexChatService {
 		if (this._ws && this._connectionState !== 'disconnected') {
 			return;
 		}
+		if (this._usesExternalServer) {
+			this._setConnectionState('connecting');
+			this._openSocket();
+			return;
+		}
 
 		// The port is assigned when the server process starts, so it must be
 		// known before the socket is opened — otherwise the first attempt goes
 		// to the default port and fails. Later calls hit the resolver's cache.
 		this._setConnectionState('connecting');
 		void resolveServerEndpoint().then(ep => {
+			if (ep.enabled === false) {
+				this._setConnectionState('disconnected');
+				return;
+			}
 			if (!ep.running || ep.port <= 0) {
 				this._setConnectionState('disconnected');
 				if (this._reconnectAttempts === 0) {
@@ -1831,6 +1860,9 @@ ${prompt}`,
 	}
 
 	private _scheduleReconnect(): void {
+		if (!this._usesExternalServer && getServerEndpoint().enabled === false) {
+			return;
+		}
 		if (this._reconnectAttempts >= 10) {
 			return;
 		}
