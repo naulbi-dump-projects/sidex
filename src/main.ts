@@ -3,7 +3,7 @@
  *  Entry point. Globals set by inline script in index.html.
  *--------------------------------------------------------------------------------------------*/
 
-import { getNlsEntries, loadNlsMessages } from './nls-loader.js';
+import { getNlsIndex, loadNlsMessages } from './nls-loader.js';
 
 async function sidexOpenFolder() {
 	try {
@@ -526,18 +526,19 @@ async function updateNativeMenuLabels() {
 	};
 
 	try {
-		const nlsEntries = await getNlsEntries();
-		if (!nlsEntries) {
+		const nlsIndex = await getNlsIndex();
+		if (!nlsIndex) {
 			return;
 		}
 
 		const labels: Record<string, string> = {};
 
-		for (let i = 0; i < nlsEntries.length; i++) {
-			const menuId = nlsKeyToMenuId[nlsEntries[i].key];
+		for (let i = 0; i < nlsIndex.messages.length; i++) {
+			const [, key, message] = nlsIndex.messages[i];
+			const menuId = nlsKeyToMenuId[key];
 			if (menuId) {
 				const translated = nlsMessages[i];
-				if (typeof translated === 'string' && translated !== nlsEntries[i].msg) {
+				if (typeof translated === 'string' && translated !== message) {
 					labels[menuId] = translated.replace(/&&/g, '').replace(/&/g, '');
 				}
 			}

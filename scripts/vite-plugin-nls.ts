@@ -78,6 +78,21 @@ export function nlsPlugin(): Plugin {
 		return results;
 	}
 
+	function serializeEntries(): string {
+		const modules: string[] = [];
+		const moduleIds = new Map<string, number>();
+		const messages = entries.map(({ module, key, msg }): [number, string, string] => {
+			let id = moduleIds.get(module);
+			if (id === undefined) {
+				id = modules.length;
+				modules.push(module);
+				moduleIds.set(module, id);
+			}
+			return [id, key, msg];
+		});
+		return JSON.stringify({ modules, messages });
+	}
+
 	return {
 		name: 'vite-plugin-nls',
 		enforce: 'pre',
@@ -89,7 +104,7 @@ export function nlsPlugin(): Plugin {
 		configureServer(server) {
 			server.middlewares.use('/nls.messages.json', (_req, res) => {
 				res.setHeader('Content-Type', 'application/json');
-				res.end(JSON.stringify(entries, null, 2));
+				res.end(serializeEntries());
 			});
 		},
 
@@ -156,7 +171,7 @@ export function nlsPlugin(): Plugin {
 				this.emitFile({
 					type: 'asset',
 					fileName: 'nls.messages.json',
-					source: JSON.stringify(entries)
+					source: serializeEntries()
 				});
 			}
 		}
