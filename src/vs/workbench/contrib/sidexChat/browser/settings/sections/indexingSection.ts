@@ -10,6 +10,7 @@
 
 import type { SettingsSection } from '../sidexSettingsPanel.js';
 import { SidexChatService } from '../../sidexChatService.js';
+import { localize } from '../../../../../../nls.js';
 
 type TauriInvoke = ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null;
 
@@ -61,7 +62,7 @@ export class IndexingSection implements SettingsSection {
 
 		const title = document.createElement('div');
 		title.className = 'sidex-settings-section-title';
-		title.textContent = 'Indexing';
+		title.textContent = localize('sidexSettingsIndexing', 'Indexing');
 		container.appendChild(title);
 
 		await this._renderStatsCard(container);
@@ -97,11 +98,14 @@ export class IndexingSection implements SettingsSection {
 
 			const lbl = document.createElement('div');
 			lbl.style.cssText = 'font-size: 13px; font-weight: 500; color: var(--vscode-foreground);';
-			lbl.textContent = 'No Workspace Open';
+			lbl.textContent = localize('sidexSettingsNoWorkspaceOpen', 'No Workspace Open');
 			emptyRow.appendChild(lbl);
 
 			const desc = document.createElement('div');
-			desc.textContent = 'Open a folder (File > Open Folder) to index your codebase for fast search.';
+			desc.textContent = localize(
+				'sidexSettingsNoWorkspaceOpenDescription',
+				'Open a folder (File > Open Folder) to index your codebase for fast search.'
+			);
 			emptyRow.appendChild(desc);
 
 			card.appendChild(emptyRow);
@@ -115,7 +119,7 @@ export class IndexingSection implements SettingsSection {
 		// Loading state
 		const loading = document.createElement('div');
 		loading.style.cssText = 'font-size:12px;padding:14px 20px;color:var(--vscode-descriptionForeground);';
-		loading.textContent = 'Loading index stats…';
+		loading.textContent = localize('sidexSettingsLoadingIndexStats', 'Loading index stats…');
 		card.appendChild(loading);
 		container.appendChild(card);
 
@@ -144,7 +148,7 @@ export class IndexingSection implements SettingsSection {
 			const header = document.createElement('div');
 			header.style.cssText =
 				'font-size:14px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px;';
-			header.innerHTML = `Codebase Indexing <span class="codicon codicon-question" style="font-size:12px;opacity:0.6;"></span>`;
+			header.innerHTML = `${localize('sidexSettingsCodebaseIndexing', 'Codebase Indexing')} <span class="codicon codicon-question" style="font-size:12px;opacity:0.6;"></span>`;
 			row1.appendChild(header);
 
 			const desc = document.createElement('div');
@@ -174,7 +178,9 @@ export class IndexingSection implements SettingsSection {
 
 			const filesLabel = document.createElement('div');
 			filesLabel.style.cssText = 'font-size:12px;color:var(--vscode-descriptionForeground);';
-			filesLabel.textContent = isIndexingActive ? 'Computing...' : '0 files';
+			filesLabel.textContent = isIndexingActive
+				? localize('sidexSettingsComputing', 'Computing...')
+				: localize('sidexSettingsFileCount', '{0} files', 0);
 			row1.appendChild(filesLabel);
 
 			card.appendChild(row1);
@@ -184,7 +190,7 @@ export class IndexingSection implements SettingsSection {
 			row2.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;padding:10px 20px;min-height:48px;';
 
 			const syncBtn = this._makeSyncBtn(card);
-			syncBtn.innerHTML = `<span class="codicon codicon-sync ${isIndexingActive ? 'codicon-modifier-spin' : ''}"></span> ${isIndexingActive ? 'Indexing...' : 'Sync'}`;
+			syncBtn.innerHTML = `<span class="codicon codicon-sync ${isIndexingActive ? 'codicon-modifier-spin' : ''}"></span> ${isIndexingActive ? localize('sidexSettingsIndexingInProgress', 'Indexing...') : localize('sidexSettingsSync', 'Sync')}`;
 			if (isIndexingActive) {
 				syncBtn.disabled = true;
 				syncBtn.style.opacity = '0.5';
@@ -196,7 +202,7 @@ export class IndexingSection implements SettingsSection {
 			deleteBtn.style.display = 'inline-flex';
 			deleteBtn.style.alignItems = 'center';
 			deleteBtn.style.gap = '6px';
-			deleteBtn.innerHTML = `<span class="codicon codicon-trash"></span> Delete Index`;
+			deleteBtn.innerHTML = `<span class="codicon codicon-trash"></span> ${localize('sidexSettingsDeleteIndex', 'Delete Index')}`;
 			deleteBtn.disabled = true;
 			deleteBtn.style.opacity = '0.5';
 			row2.appendChild(deleteBtn);
@@ -211,7 +217,7 @@ export class IndexingSection implements SettingsSection {
 			const header = document.createElement('div');
 			header.style.cssText =
 				'font-size:14px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px;';
-			header.innerHTML = `Codebase Indexing <span class="codicon codicon-question" style="font-size:12px;opacity:0.6;"></span>`;
+			header.innerHTML = `${localize('sidexSettingsCodebaseIndexing', 'Codebase Indexing')} <span class="codicon codicon-question" style="font-size:12px;opacity:0.6;"></span>`;
 			row1.appendChild(header);
 
 			const desc = document.createElement('div');
@@ -236,7 +242,7 @@ export class IndexingSection implements SettingsSection {
 			const filesLabel = document.createElement('div');
 			filesLabel.style.cssText = 'font-size:12px;color:var(--vscode-descriptionForeground);';
 			const fileCount = stats?.total_files ?? 0;
-			filesLabel.textContent = `${fileCount.toLocaleString()} files`;
+			filesLabel.textContent = localize('sidexSettingsFileCount', '{0} files', fileCount.toLocaleString());
 			row1.appendChild(filesLabel);
 
 			card.appendChild(row1);
@@ -246,7 +252,7 @@ export class IndexingSection implements SettingsSection {
 			row2.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;padding:10px 20px;min-height:48px;';
 
 			const syncBtn = this._makeSyncBtn(card);
-			syncBtn.innerHTML = `<span class="codicon codicon-sync ${isIndexingActive ? 'codicon-modifier-spin' : ''}"></span> ${isIndexingActive ? 'Indexing...' : 'Sync'}`;
+			syncBtn.innerHTML = `<span class="codicon codicon-sync ${isIndexingActive ? 'codicon-modifier-spin' : ''}"></span> ${isIndexingActive ? localize('sidexSettingsIndexingInProgress', 'Indexing...') : localize('sidexSettingsSync', 'Sync')}`;
 			if (isIndexingActive) {
 				syncBtn.disabled = true;
 				syncBtn.style.opacity = '0.5';
@@ -258,7 +264,7 @@ export class IndexingSection implements SettingsSection {
 			deleteBtn.style.display = 'inline-flex';
 			deleteBtn.style.alignItems = 'center';
 			deleteBtn.style.gap = '6px';
-			deleteBtn.innerHTML = `<span class="codicon codicon-trash"></span> Delete Index`;
+			deleteBtn.innerHTML = `<span class="codicon codicon-trash"></span> ${localize('sidexSettingsDeleteIndex', 'Delete Index')}`;
 			deleteBtn.addEventListener('mouseover', () => {
 				if (!deleteBtn.disabled) {
 					deleteBtn.style.background = 'rgba(255,0,0,0.1)';
@@ -276,7 +282,7 @@ export class IndexingSection implements SettingsSection {
 					return;
 				}
 				deleteBtn.disabled = true;
-				deleteBtn.textContent = 'Deleting…';
+				deleteBtn.textContent = localize('sidexSettingsDeleting', 'Deleting…');
 				this._invoke('index_clear')
 					.then(() => {
 						// Fire the event to reload the UI cleanly
@@ -288,7 +294,7 @@ export class IndexingSection implements SettingsSection {
 					})
 					.catch(() => {
 						deleteBtn.disabled = false;
-						deleteBtn.innerHTML = `<span class="codicon codicon-trash"></span> Delete Index`;
+						deleteBtn.innerHTML = `<span class="codicon codicon-trash"></span> ${localize('sidexSettingsDeleteIndex', 'Delete Index')}`;
 					});
 			});
 			row2.appendChild(deleteBtn);
@@ -299,8 +305,14 @@ export class IndexingSection implements SettingsSection {
 
 	private _indexingDescription(): string {
 		return this._cloudApiConfigured
-			? "Your codebase is indexed on-device with BM25 keyword search, and results are augmented from the remote semantic index you've configured via SIDEX_CLOUD_API. Search queries are sent there — your code itself never leaves this machine."
-			: 'Your codebase is indexed on-device with BM25 keyword search. Nothing leaves this machine — there is no cloud index configured.';
+			? localize(
+					'sidexSettingsRemoteIndexDescription',
+					"Your codebase is indexed on-device with BM25 keyword search, and results are augmented from the remote semantic index you've configured via SIDEX_CLOUD_API. Search queries are sent there — your code itself never leaves this machine."
+				)
+			: localize(
+					'sidexSettingsLocalIndexDescription',
+					'Your codebase is indexed on-device with BM25 keyword search. Nothing leaves this machine — there is no cloud index configured.'
+				);
 	}
 
 	private _makeSyncBtn(_card: HTMLElement): HTMLButtonElement {
@@ -309,7 +321,7 @@ export class IndexingSection implements SettingsSection {
 		btn.style.display = 'inline-flex';
 		btn.style.alignItems = 'center';
 		btn.style.gap = '6px';
-		btn.innerHTML = `<span class="codicon codicon-sync"></span> Sync`;
+		btn.innerHTML = `<span class="codicon codicon-sync"></span> ${localize('sidexSettingsSync', 'Sync')}`;
 
 		btn.addEventListener('mouseover', () => {
 			if (!btn.disabled) {
@@ -357,24 +369,24 @@ export class IndexingSection implements SettingsSection {
 
 		this._addToggleRow(
 			card,
-			'Auto-index new folders',
-			'Automatically re-index when files change',
+			localize('sidexSettingsAutoIndex', 'Auto-index new folders'),
+			localize('sidexSettingsAutoIndexDescription', 'Automatically re-index when files change'),
 			'sidex.indexing.autoIndex',
 			true
 		);
 
 		this._addToggleRow(
 			card,
-			'Respect .gitignore',
-			'Skip files and directories listed in .gitignore',
+			localize('sidexSettingsRespectGitignore', 'Respect .gitignore'),
+			localize('sidexSettingsRespectGitignoreDescription', 'Skip files and directories listed in .gitignore'),
 			'sidex.indexing.respectGitignore',
 			true
 		);
 
 		this._addToggleRow(
 			card,
-			'Instant grep',
-			'Use the local index for fast grep across the codebase',
+			localize('sidexSettingsInstantGrep', 'Instant grep'),
+			localize('sidexSettingsInstantGrepDescription', 'Use the local index for fast grep across the codebase'),
 			'sidex.indexing.instantGrep',
 			true
 		);

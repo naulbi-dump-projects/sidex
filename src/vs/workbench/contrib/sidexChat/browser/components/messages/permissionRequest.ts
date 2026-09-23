@@ -5,6 +5,7 @@
 import { Component, DOM, $ } from '../base.js';
 import { Emitter, Event } from '../../../../../../base/common/event.js';
 import { renderMarkdown } from '../markdownRenderer.js';
+import { localize } from '../../../../../../nls.js';
 
 export interface PermissionRequestData {
 	toolCallId: string;
@@ -19,19 +20,19 @@ export interface PermissionResult {
 }
 
 const TOOL_VERBS: Record<string, string> = {
-	shell: 'Run command',
-	run_background: 'Run background process',
-	kill_shell: 'Kill process',
-	write_file: 'Write to',
-	edit_file: 'Edit',
-	multi_edit: 'Edit',
-	patch_file: 'Patch',
-	regex_replace: 'Replace in',
-	notebook_edit: 'Edit notebook',
-	git_commit: 'Commit',
-	repl: 'Run REPL',
-	powershell: 'Run PowerShell',
-	delete_file: 'Delete'
+	shell: localize('sidex.chat.runCommand', 'Run command'),
+	run_background: localize('sidex.chat.runBackgroundProcess', 'Run background process'),
+	kill_shell: localize('sidex.chat.killProcess', 'Kill process'),
+	write_file: localize('sidex.chat.writeTo', 'Write to'),
+	edit_file: localize('sidex.chat.edit', 'Edit'),
+	multi_edit: localize('sidex.chat.edit', 'Edit'),
+	patch_file: localize('sidex.chat.patch', 'Patch'),
+	regex_replace: localize('sidex.chat.replaceIn', 'Replace in'),
+	notebook_edit: localize('sidex.chat.editNotebook', 'Edit notebook'),
+	git_commit: localize('sidex.chat.commit', 'Commit'),
+	repl: localize('sidex.chat.runRepl', 'Run REPL'),
+	powershell: localize('sidex.chat.runPowerShell', 'Run PowerShell'),
+	delete_file: localize('sidex.chat.deleteFile', 'Delete')
 };
 
 export class PermissionRequestDialog extends Component {
@@ -78,7 +79,7 @@ export class PermissionRequestDialog extends Component {
 		const denyBtn = DOM.append(buttons, $('button.sc-permission-btn.sc-permission-deny'));
 		denyBtn.style.cssText =
 			'padding: 6px 12px; border-radius: 4px; border: 1px solid var(--vscode-widget-border); background: transparent; color: var(--vscode-foreground); cursor: pointer; font-size: 12px;';
-		denyBtn.textContent = 'Cancel';
+		denyBtn.textContent = localize('sidex.chat.cancel', 'Cancel');
 		this.on(denyBtn, 'click', () => {
 			this._onRespond.fire({ toolCallId: data.toolCallId, approved: false, alwaysAllow: false });
 			this._dismiss();
@@ -102,7 +103,7 @@ export class PermissionRequestDialog extends Component {
 
 		const content = this.append('div', 'sc-permission-content');
 		const title = DOM.append(content, $('div.sc-permission-desc'));
-		title.textContent = 'Plan ready for review';
+		title.textContent = localize('sidex.chat.planReady', 'Plan ready for review');
 		title.style.fontWeight = '600';
 
 		const plan = typeof data.args?.['plan'] === 'string' ? (data.args['plan'] as string) : '';
@@ -113,20 +114,23 @@ export class PermissionRequestDialog extends Component {
 		} else {
 			const note = DOM.append(content, $('div.sc-plan-approval-body'));
 			note.style.cssText = 'margin-top:6px;font-size:12px;opacity:0.8;';
-			note.textContent = 'The agent wants to start implementing (see its plan in the conversation above).';
+			note.textContent = localize(
+				'sidex.chat.planImplementationNotice',
+				'The agent wants to start implementing (see its plan in the conversation above).'
+			);
 		}
 
 		const buttons = this.append('div', 'sc-permission-buttons');
 
 		const denyBtn = DOM.append(buttons, $('button.sc-permission-btn.sc-permission-deny'));
-		denyBtn.textContent = 'Keep planning';
+		denyBtn.textContent = localize('sidex.chat.keepPlanning', 'Keep planning');
 		this.on(denyBtn, 'click', () => {
 			this._onRespond.fire({ toolCallId: data.toolCallId, approved: false, alwaysAllow: false });
 			this._dismiss();
 		});
 
 		const allowBtn = DOM.append(buttons, $('button.sc-permission-btn.sc-permission-allow'));
-		allowBtn.textContent = 'Approve plan';
+		allowBtn.textContent = localize('sidex.chat.approvePlan', 'Approve plan');
 		this.on(allowBtn, 'click', () => {
 			this._onRespond.fire({ toolCallId: data.toolCallId, approved: true, alwaysAllow: false });
 			this._dismiss();
@@ -161,9 +165,9 @@ export class PermissionRequestDialog extends Component {
 
 	private _getButtonLabel(toolName: string): string {
 		if (toolName === 'shell' || toolName === 'run_background' || toolName === 'repl' || toolName === 'powershell') {
-			return 'Run command';
+			return localize('sidex.chat.runCommand', 'Run command');
 		}
-		return 'Allow';
+		return localize('sidex.chat.allow', 'Allow');
 	}
 
 	private _dismiss(): void {

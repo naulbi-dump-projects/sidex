@@ -7,6 +7,7 @@ import { MentionPopup } from './mentionPopup.js';
 import { MentionResolver, MentionItem } from '../../context/mentionResolver.js';
 import { URI } from '../../../../../../base/common/uri.js';
 import { ISidexChatService } from '../../sidexChatService.js';
+import { localize } from '../../../../../../nls.js';
 
 export type AgentMode = 'agent' | 'plan' | 'ask';
 
@@ -28,6 +29,36 @@ function codicon(c: ThemeIcon): HTMLSpanElement {
 	const el = document.createElement('span');
 	el.classList.add(...ThemeIcon.asClassNameArray(c));
 	return el;
+}
+
+function modeLabel(mode: AgentMode): string {
+	switch (mode) {
+		case 'agent':
+			return localize('sidexAgentMode', 'Agent');
+		case 'plan':
+			return localize('sidexPlanMode', 'Plan');
+		case 'ask':
+			return localize('sidexAskMode', 'Ask');
+		default:
+			return mode;
+	}
+}
+
+function reasoningLevelLabel(level: 'None' | 'Low' | 'Medium' | 'High' | 'Ultra'): string {
+	switch (level) {
+		case 'None':
+			return localize('sidex.chat.reasoningNone', 'None');
+		case 'Low':
+			return localize('sidex.chat.reasoningLow', 'Low');
+		case 'Medium':
+			return localize('sidex.chat.reasoningMedium', 'Medium');
+		case 'High':
+			return localize('sidex.chat.reasoningHigh', 'High');
+		case 'Ultra':
+			return localize('sidex.chat.reasoningUltra', 'Ultra');
+		default:
+			return level;
+	}
 }
 
 export class ChatInput extends Component {
@@ -139,7 +170,7 @@ export class ChatInput extends Component {
 				background: color-mix(in srgb, var(--vscode-input-background) 90%, var(--vscode-button-background) 10%) !important;
 			}
 			.sc-input-container.drag-over::after {
-				content: 'Drop files to attach';
+				content: '${localize('sidex.chat.dropFiles', 'Drop files to attach')}';
 				position: absolute;
 				inset: 0;
 				display: flex;
@@ -506,7 +537,10 @@ export class ChatInput extends Component {
 		this._attachmentsContainer = DOM.append(container, $('div.sc-attachment-pills'));
 
 		this._textareaEl = DOM.append(container, $('textarea.sc-textarea')) as HTMLTextAreaElement;
-		this._textareaEl.placeholder = 'Plan, Build, / for commands, @ for context';
+		this._textareaEl.placeholder = localize(
+			'sidex.chat.inputPlaceholder',
+			'Plan, Build, / for commands, @ for context'
+		);
 		this._textareaEl.rows = 1;
 
 		const footer = DOM.append(container, $('div.sc-input-footer'));
@@ -519,7 +553,7 @@ export class ChatInput extends Component {
 		modeIconEl.innerHTML =
 			'<svg width="14" height="14" viewBox="0 0 20 20" fill="none"><g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><line x1="10" y1="3" x2="10" y2="4"/><line x1="6.5" y1="3.9378" x2="7" y2="4.8038"/><line x1="3.9378" y1="6.5" x2="4.8038" y2="7"/><line x1="3" y1="10" x2="4" y2="10"/><line x1="3.9378" y1="13.5" x2="4.8038" y2="13"/><line x1="6.5" y1="16.0622" x2="7" y2="15.1962"/><line x1="10" y1="17" x2="10" y2="16"/><line x1="13.5" y1="16.0622" x2="13" y2="15.1962"/><line x1="16.0622" y1="13.5" x2="15.1962" y2="13"/><line x1="17" y1="10" x2="16" y2="10"/><line x1="16.0622" y1="6.5" x2="15.1962" y2="7"/><line x1="13.5" y1="3.9378" x2="13" y2="4.8038"/></g></svg>';
 		this._modeLabel = DOM.append(modeBtn, $('span.sc-mode-label'));
-		this._modeLabel.textContent = 'Agent';
+		this._modeLabel.textContent = modeLabel('agent');
 		const modeChevEl = document.createElement('span');
 		modeChevEl.classList.add(...ThemeIcon.asClassNameArray(Codicon.chevronDown), 'codicon-sm');
 		modeBtn.appendChild(modeChevEl);
@@ -529,7 +563,7 @@ export class ChatInput extends Component {
 		for (const mode of ['agent', 'plan', 'ask'] as AgentMode[]) {
 			const item = DOM.append(this._modeMenu, $('div.sc-mode-menu-item'));
 			item.dataset.mode = mode;
-			item.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+			item.textContent = modeLabel(mode);
 			if (mode === 'agent') {
 				item.classList.add('active');
 			}
@@ -586,7 +620,7 @@ export class ChatInput extends Component {
 
 		// Context Usage badge (minimal circular progress ring matching the image) - placed on the right side of the footer
 		const contextBadge = DOM.append(right, $('div.sc-context-badge'));
-		contextBadge.title = 'View detailed context usage';
+		contextBadge.title = localize('sidex.chat.contextUsage', 'View detailed context usage');
 		contextBadge.innerHTML = `
 			<svg class="sc-context-ring" width="16" height="16" viewBox="0 0 16 16">
 				<!-- Track (grey) -->
@@ -633,7 +667,7 @@ export class ChatInput extends Component {
 
 		// Attach button — folder icon
 		const attachBtn = DOM.append(right, $('button.sc-input-icon-btn'));
-		attachBtn.title = 'Attach';
+		attachBtn.title = localize('sidex.chat.attach', 'Attach');
 		attachBtn.appendChild(codicon(Codicon.folder));
 		this.on(attachBtn, 'click', () => {
 			void this._attachFiles();
@@ -641,13 +675,13 @@ export class ChatInput extends Component {
 
 		// Send button — custom SVG (circle + up arrow)
 		this._sendBtn = DOM.append(right, $('button.sc-send-btn'));
-		this._sendBtn.title = 'Send';
+		this._sendBtn.title = localize('sidex.chat.send', 'Send');
 		this._sendBtn.innerHTML =
 			'<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M4.14645 6.14645L6.64645 3.64645C6.84171 3.45118 7.15829 3.45118 7.35355 3.64645L9.8536 6.14645C10.0488 6.34171 10.0488 6.65829 9.8536 6.85355C9.6583 7.04882 9.3417 7.04882 9.1464 6.85355L8.3232 6.03033L7.5 5.20711V10C7.5 10.2761 7.27614 10.5 7 10.5C6.72386 10.5 6.5 10.2761 6.5 10V5.20711L4.85355 6.85355C4.65829 7.04882 4.34171 7.04882 4.14645 6.85355C3.95118 6.65829 3.95118 6.34171 4.14645 6.14645ZM7 0C3.13401 0 0 3.13401 0 7C0 10.866 3.13401 14 7 14C10.866 14 14 10.866 14 7C14 3.13401 10.866 0 7 0Z"/></svg>';
 
 		// Stop button — custom SVG (circle + square)
 		this._stopBtn = DOM.append(right, $('button.sc-stop-btn'));
-		this._stopBtn.title = 'Stop';
+		this._stopBtn.title = localize('sidex.chat.stop', 'Stop');
 		this._stopBtn.innerHTML =
 			'<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M5 4C4.44772 4 4 4.44772 4 5V9C4 9.5523 4.44772 10 5 10H9C9.5523 10 10 9.5523 10 9V5C10 4.44772 9.5523 4 9 4H5ZM0 7C0 3.13401 3.13401 0 7 0C10.866 0 14 3.13401 14 7C14 10.866 10.866 14 7 14C3.13401 14 0 10.866 0 7Z"/></svg>';
 		this._stopBtn.style.display = 'none';
@@ -752,12 +786,12 @@ export class ChatInput extends Component {
 
 		// Flat, borderless button acting as the dropdown trigger
 		const localBtn = DOM.append(tray, $('button.sc-tray-btn'));
-		localBtn.title = 'SideX Environment Connection Mode';
+		localBtn.title = localize('sidex.chat.environmentMode', 'SideX Environment Connection Mode');
 		localBtn.innerHTML = `
 			<svg class="sc-tray-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 				<path d="M5.270 3.041 C 4.702 3.138,4.154 3.442,3.728 3.898 C 3.450 4.195,3.248 4.538,3.114 4.940 L 3.020 5.220 3.009 10.607 L 2.998 15.994 2.249 16.007 C 1.531 16.019,1.494 16.024,1.355 16.118 C 1.276 16.172,1.168 16.278,1.115 16.355 C 1.020 16.494,1.020 16.500,1.020 17.617 C 1.020 18.681,1.025 18.756,1.113 19.040 C 1.256 19.498,1.455 19.822,1.816 20.184 C 2.178 20.545,2.502 20.744,2.960 20.887 L 3.260 20.980 12.000 20.980 L 20.740 20.980 21.040 20.887 C 21.498 20.744,21.822 20.545,22.184 20.184 C 22.545 19.822,22.744 19.498,22.887 19.040 C 22.975 18.756,22.980 18.681,22.980 17.613 C 22.980 16.349,22.993 16.409,22.664 16.142 L 22.513 16.020 21.757 16.007 L 21.002 15.994 20.991 10.607 L 20.980 5.220 20.886 4.940 C 20.605 4.098,19.928 3.409,19.109 3.131 L 18.780 3.020 12.120 3.014 C 8.457 3.011,5.375 3.023,5.270 3.041 M18.760 4.623 C 19.052 4.758,19.225 4.929,19.365 5.220 L 19.480 5.460 19.480 10.730 L 19.480 16.000 12.000 16.000 L 4.520 16.000 4.520 10.730 L 4.521 5.460 4.623 5.240 C 4.758 4.948,4.929 4.775,5.220 4.635 L 5.460 4.520 12.000 4.520 L 18.540 4.521 18.760 4.623 M21.480 18.030 C 21.480 18.508,21.473 18.555,21.366 18.782 C 21.226 19.076,20.954 19.327,20.667 19.428 C 20.470 19.497,20.050 19.500,12.000 19.500 C 3.950 19.500,3.530 19.497,3.333 19.428 C 3.046 19.327,2.774 19.076,2.634 18.782 C 2.527 18.555,2.520 18.508,2.520 18.030 L 2.520 17.520 12.000 17.520 L 21.480 17.520 21.480 18.030 " stroke="none" fill-rule="evenodd" fill="currentColor"></path>
 			</svg>
-			<span>Local</span>
+			<span>${localize('sidex.chat.local', 'Local')}</span>
 		`;
 
 		// Bottom tray dropdown menu (inherits sc-mode-menu layout, but layers correctly)
@@ -770,7 +804,7 @@ export class ChatInput extends Component {
 				<svg class="sc-tray-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 					<path d="M5.270 3.041 C 4.702 3.138,4.154 3.442,3.728 3.898 C 3.450 4.195,3.248 4.538,3.114 4.940 L 3.020 5.220 3.009 10.607 L 2.998 15.994 2.249 16.007 C 1.531 16.019,1.494 16.024,1.355 16.118 C 1.276 16.172,1.168 16.278,1.115 16.355 C 1.020 16.494,1.020 16.500,1.020 17.617 C 1.020 18.681,1.025 18.756,1.113 19.040 C 1.256 19.498,1.455 19.822,1.816 20.184 C 2.178 20.545,2.502 20.744,2.960 20.887 L 3.260 20.980 12.000 20.980 L 20.740 20.980 21.040 20.887 C 21.498 20.744,21.822 20.545,22.184 20.184 C 22.545 19.822,22.744 19.498,22.887 19.040 C 22.975 18.756,22.980 18.681,22.980 17.613 C 22.980 16.349,22.993 16.409,22.664 16.142 L 22.513 16.020 21.757 16.007 L 21.002 15.994 20.991 10.607 L 20.980 5.220 20.886 4.940 C 20.605 4.098,19.928 3.409,19.109 3.131 L 18.780 3.020 12.120 3.014 C 8.457 3.011,5.375 3.023,5.270 3.041 M18.760 4.623 C 19.052 4.758,19.225 4.929,19.365 5.220 L 19.480 5.460 19.480 10.730 L 19.480 16.000 12.000 16.000 L 4.520 16.000 4.520 10.730 L 4.521 5.460 4.623 5.240 C 4.758 4.948,4.929 4.775,5.220 4.635 L 5.460 4.520 12.000 4.520 L 18.540 4.521 18.760 4.623 M21.480 18.030 C 21.480 18.508,21.473 18.555,21.366 18.782 C 21.226 19.076,20.954 19.327,20.667 19.428 C 20.470 19.497,20.050 19.500,12.000 19.500 C 3.950 19.500,3.530 19.497,3.333 19.428 C 3.046 19.327,2.774 19.076,2.634 18.782 C 2.527 18.555,2.520 18.508,2.520 18.030 L 2.520 17.520 12.000 17.520 L 21.480 17.520 21.480 18.030 " stroke="none" fill-rule="evenodd" fill="currentColor"></path>
 				</svg>
-				<span class="min-w-0 truncate">Local</span>
+				<span class="min-w-0 truncate">${localize('sidex.chat.local', 'Local')}</span>
 			</div>
 		`;
 		this.on(mLocal, 'click', () => {
@@ -780,7 +814,7 @@ export class ChatInput extends Component {
 
 		// Item 2: Worktree (Disabled Coming Soon)
 		const mWorktree = DOM.append(trayMenu, $('div.sc-mode-menu-item.disabled'));
-		mWorktree.title = 'Worktree Mode — Coming Soon';
+		mWorktree.title = localize('sidex.chat.worktreeSoon', 'Worktree Mode — Coming Soon');
 		mWorktree.innerHTML = `
 			<div style="display: flex; align-items: center; gap: 8px;">
 				<svg class="sc-tray-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -788,22 +822,22 @@ export class ChatInput extends Component {
 					<circle cx="18" cy="6" r="3"></circle>
 					<circle cx="6" cy="18" r="3"></circle>
 				</svg>
-				<span class="min-w-0 truncate">Worktree</span>
+				<span class="min-w-0 truncate">${localize('sidex.chat.worktree', 'Worktree')}</span>
 			</div>
-			<span style="font-size: 10px; opacity: 0.6; margin-left: auto; padding-right: 4px;">soon</span>
+			<span style="font-size: 10px; opacity: 0.6; margin-left: auto; padding-right: 4px;">${localize('sidex.chat.soon', 'soon')}</span>
 		`;
 
 		// Item 3: Cloud (Disabled Coming Soon)
 		const mCloud = DOM.append(trayMenu, $('div.sc-mode-menu-item.disabled'));
-		mCloud.title = 'Cloud Mode — Coming Soon';
+		mCloud.title = localize('sidex.chat.cloudSoon', 'Cloud Mode — Coming Soon');
 		mCloud.innerHTML = `
 			<div style="display: flex; align-items: center; gap: 8px;">
 				<svg class="sc-tray-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 					<path d="M8.120 4.042 C 5.012 4.380,2.409 6.479,1.423 9.443 C 0.555 12.051,1.045 14.847,2.750 17.017 C 3.051 17.400,3.710 18.048,4.102 18.346 C 5.293 19.253,6.701 19.816,8.140 19.961 C 8.444 19.991,10.018 20.000,13.220 19.990 C 18.375 19.973,18.072 19.989,18.949 19.697 C 19.684 19.452,20.371 19.063,20.949 18.562 C 22.629 17.109,23.359 14.796,22.819 12.639 C 22.541 11.528,22.013 10.611,21.194 9.816 C 20.287 8.936,19.251 8.419,17.986 8.215 C 17.669 8.164,17.419 8.155,16.841 8.172 C 15.925 8.200,15.924 8.200,15.636 7.746 C 14.696 6.265,13.372 5.168,11.740 4.520 C 11.360 4.369,10.649 4.180,10.160 4.100 C 9.692 4.024,8.578 3.992,8.120 4.042 M9.907 5.582 C 10.933 5.734,11.911 6.154,12.802 6.825 C 13.349 7.237,13.853 7.787,14.310 8.469 C 14.686 9.031,14.885 9.245,15.200 9.425 C 15.635 9.672,10.011 9.737,16.646 9.675 C 17.475 9.594,18.231 9.720,18.949 10.060 C 19.461 10.302,19.857 10.586,20.248 10.993 C 20.618 11.379,20.793 11.626,21.031 12.101 C 21.344 12.725,21.479 13.327,21.480 14.094 C 21.481 16.114,20.139 17.851,18.180 18.366 C 17.629 18.511,17.051 18.526,12.600 18.510 C 7.987 18.492,8.131 18.499,7.300 18.285 C 4.951 17.679,3.068 15.640,2.616 13.213 C 2.528 12.742,2.497 11.649,2.558 11.184 C 2.840 9.038,4.117 7.199,6.000 6.226 C 6.952 5.735,7.792 5.529,8.875 5.523 C 9.242 5.521,9.658 5.545,9.907 5.582 " stroke="none" fill-rule="evenodd" fill="currentColor"></path>
 				</svg>
-				<span class="min-w-0 truncate">Cloud</span>
+				<span class="min-w-0 truncate">${localize('sidex.chat.cloud', 'Cloud')}</span>
 			</div>
-			<span style="font-size: 10px; opacity: 0.6; margin-left: auto; padding-right: 4px;">soon</span>
+			<span style="font-size: 10px; opacity: 0.6; margin-left: auto; padding-right: 4px;">${localize('sidex.chat.soon', 'soon')}</span>
 		`;
 
 		this.on(localBtn, 'click', e => {
@@ -860,7 +894,7 @@ export class ChatInput extends Component {
 
 	setMode(mode: AgentMode): void {
 		this._currentMode = mode;
-		this._modeLabel.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+		this._modeLabel.textContent = modeLabel(mode);
 		this._modeMenu.querySelectorAll('.sc-mode-menu-item').forEach(item => {
 			(item as HTMLElement).classList.toggle('active', (item as HTMLElement).dataset.mode === mode);
 		});
@@ -871,7 +905,8 @@ export class ChatInput extends Component {
 		this._currentModel = model;
 		const known = this._modelCatalog.find(m => m.id === model);
 		const base = known?.name || model.replace(/^[a-z0-9-]+\//, '') || model;
-		this._modelLabel.textContent = this._reasoningLevel === 'None' ? base : `${base} · ${this._reasoningLevel}`;
+		this._modelLabel.textContent =
+			this._reasoningLevel === 'None' ? base : `${base} · ${reasoningLevelLabel(this._reasoningLevel)}`;
 	}
 
 	getModel(): string {
@@ -898,7 +933,7 @@ export class ChatInput extends Component {
 			empty.className = 'sc-model-menu-item';
 			empty.style.opacity = '0.7';
 			empty.style.cursor = 'default';
-			empty.textContent = 'No models enabled — enable models in Settings';
+			empty.textContent = localize('sidex.chat.noModelsEnabled', 'No models enabled — enable models in Settings');
 			menu.appendChild(empty);
 		}
 
@@ -935,7 +970,7 @@ export class ChatInput extends Component {
 		const ultraRow = document.createElement('div');
 		ultraRow.className = 'sc-model-menu-ultra';
 		const ultraLabel = document.createElement('span');
-		ultraLabel.textContent = 'ULTRA Mode';
+		ultraLabel.textContent = localize('sidex.chat.ultraMode', 'ULTRA Mode');
 		ultraRow.appendChild(ultraLabel);
 
 		const ultraToggle = document.createElement('div');
@@ -955,7 +990,7 @@ export class ChatInput extends Component {
 
 		const rHeader = DOM.append(reasoningRow, $('div.sc-model-menu-reasoning-header'));
 		const rTitle = DOM.append(rHeader, $('span'));
-		rTitle.textContent = 'Effort';
+		rTitle.textContent = localize('sidex.chat.effort', 'Effort');
 		const rVal = DOM.append(rHeader, $('span.sc-model-menu-reasoning-level-val'));
 
 		const rSliderContainer = DOM.append(reasoningRow, $('div.sc-model-menu-reasoning-slider-container'));
@@ -966,8 +1001,8 @@ export class ChatInput extends Component {
 		rSlider.step = '1';
 
 		const ticks = DOM.append(rSliderContainer, $('div.sc-model-menu-reasoning-ticks'));
-		for (const label of ['None', 'Low', 'Med', 'High', 'Ultra']) {
-			DOM.append(ticks, $('span')).textContent = label;
+		for (const level of ChatInput.REASONING_LEVELS) {
+			DOM.append(ticks, $('span')).textContent = reasoningLevelLabel(level);
 		}
 
 		const commitLevel = (lvl: 'None' | 'Low' | 'Medium' | 'High' | 'Ultra') => {
@@ -978,7 +1013,7 @@ export class ChatInput extends Component {
 			} catch {
 				/* */
 			}
-			rVal.textContent = lvl;
+			rVal.textContent = reasoningLevelLabel(lvl);
 			const idx = ChatInput.REASONING_LEVELS.indexOf(lvl);
 			rSlider.value = String(idx < 0 ? 0 : idx);
 			ultraToggle.classList.toggle('on', this._maxMode);
@@ -997,7 +1032,7 @@ export class ChatInput extends Component {
 
 		const currentIdx = ChatInput.REASONING_LEVELS.indexOf(this._reasoningLevel);
 		rSlider.value = currentIdx !== -1 ? String(currentIdx) : '0';
-		rVal.textContent = this._reasoningLevel;
+		rVal.textContent = reasoningLevelLabel(this._reasoningLevel);
 		this._paintEffortTicks(ticks, currentIdx !== -1 ? currentIdx : 0);
 		this._maxMode = this._reasoningLevel === 'Ultra';
 		ultraToggle.classList.toggle('on', this._maxMode);
@@ -1109,7 +1144,7 @@ export class ChatInput extends Component {
 		try {
 			resolvedContent = await this._mentionResolver.resolve(item);
 		} catch {
-			resolvedContent = `[Could not resolve: ${item.label}]`;
+			resolvedContent = `[${localize('sidex.chat.unresolvedMention', 'Could not resolve: {0}', item.label)}]`;
 		}
 
 		const mention: ResolvedMention = { item, resolvedContent };
@@ -1202,7 +1237,7 @@ export class ChatInput extends Component {
 		const removeBtn = document.createElement('button');
 		removeBtn.type = 'button';
 		removeBtn.className = attachment.kind === 'image' ? 'sc-attachment-image-remove' : 'sc-mention-pill-remove';
-		removeBtn.setAttribute('aria-label', `Remove ${attachment.name}`);
+		removeBtn.setAttribute('aria-label', localize('sidex.chat.removeAttachment', 'Remove {0}', attachment.name));
 		removeBtn.textContent = '×';
 		removeBtn.addEventListener('click', e => {
 			e.stopPropagation();
@@ -1216,7 +1251,7 @@ export class ChatInput extends Component {
 			imageContainer.className = 'image-pill-container';
 			const img = document.createElement('img');
 			img.className = 'image-pill-img';
-			img.alt = 'Attached image';
+			img.alt = localize('sidex.chat.attachedImage', 'Attached image');
 			img.loading = 'lazy';
 			imageContainer.appendChild(img);
 			imageContainer.appendChild(removeBtn);

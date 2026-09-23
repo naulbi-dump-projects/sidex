@@ -18,6 +18,7 @@ import {
 	Severity,
 	INotificationHandle
 } from '../../../../platform/notification/common/notification.js';
+import { localize } from '../../../../nls.js';
 
 const INITIAL_CHECK_DELAY = 5 * 1000; // Check 5s after startup (Cursor style)
 const RECHECK_INTERVAL = 4 * 60 * 60 * 1000; // Check every 4 hours
@@ -84,14 +85,14 @@ export class SidexUpdateContribution extends Disposable {
 
 		this._notification = this.notificationService.notify({
 			severity: Severity.Info,
-			message: `An update to SideX ${version} is available.`,
+			message: localize('sidex.update.available', 'An update to SideX {0} is available.', version),
 			sticky: true,
 			actions: {
 				primary: [
 					{
 						id: 'sidex.update.download',
-						label: 'Install Now',
-						tooltip: 'Download and install the update in the background',
+						label: localize('sidex.update.installNow', 'Install Now'),
+						tooltip: localize('sidex.update.downloadTooltip', 'Download and install the update in the background'),
 						class: undefined,
 						enabled: true,
 						run: () => {
@@ -101,8 +102,8 @@ export class SidexUpdateContribution extends Disposable {
 					},
 					{
 						id: 'sidex.update.later',
-						label: 'Later',
-						tooltip: 'Remind me later',
+						label: localize('sidex.update.later', 'Later'),
+						tooltip: localize('sidex.update.remindLater', 'Remind me later'),
 						class: undefined,
 						enabled: true,
 						run: () => {
@@ -125,14 +126,18 @@ export class SidexUpdateContribution extends Disposable {
 
 		this._notification = this.notificationService.notify({
 			severity: Severity.Info,
-			message: `SideX ${version} has been successfully downloaded and is ready to install.`,
+			message: localize(
+				'sidex.update.ready',
+				'SideX {0} has been successfully downloaded and is ready to install.',
+				version
+			),
 			sticky: true,
 			actions: {
 				primary: [
 					{
 						id: 'sidex.update.restart',
-						label: 'Restart to Update',
-						tooltip: 'Relaunch SideX to apply the update',
+						label: localize('sidex.update.restart', 'Restart to Update'),
+						tooltip: localize('sidex.update.restartTooltip', 'Relaunch SideX to apply the update'),
 						class: undefined,
 						enabled: true,
 						run: () => {
@@ -142,8 +147,8 @@ export class SidexUpdateContribution extends Disposable {
 					},
 					{
 						id: 'sidex.update.ready_later',
-						label: 'Later',
-						tooltip: 'Apply on next restart',
+						label: localize('sidex.update.later', 'Later'),
+						tooltip: localize('sidex.update.nextRestart', 'Apply on next restart'),
 						class: undefined,
 						enabled: true,
 						run: () => {

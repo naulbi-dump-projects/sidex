@@ -2,6 +2,7 @@ import type { SettingsSection } from '../sidexSettingsPanel.js';
 import { restartServer } from '../../localServer.js';
 import { showConfirmDialog } from '../../components/confirmDialog.js';
 import { createProductMark, productMarkKind } from '../productMarks.js';
+import { localize } from '../../../../../../nls.js';
 
 type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 
@@ -165,12 +166,15 @@ export class ModelsSection implements SettingsSection {
 
 		const title = document.createElement('div');
 		title.className = 'sidex-settings-section-title';
-		title.textContent = 'Models';
+		title.textContent = localize('sidexSettingsModels', 'Models');
 		section.appendChild(title);
 
 		const desc = document.createElement('div');
 		desc.className = 'sidex-settings-row-description sidex-settings-section-desc';
-		desc.textContent = 'Add the model IDs your providers serve. Nothing is enabled until you add it here.';
+		desc.textContent = localize(
+			'sidexSettingsModelsDescription',
+			'Add the model IDs your providers serve. Nothing is enabled until you add it here.'
+		);
 		section.appendChild(desc);
 
 		const card = document.createElement('div');
@@ -220,7 +224,7 @@ export class ModelsSection implements SettingsSection {
 		wrap.appendChild(icon);
 		const input = document.createElement('input');
 		input.type = 'text';
-		input.placeholder = 'Search your models';
+		input.placeholder = localize('sidexSettingsSearchModels', 'Search your models');
 		input.addEventListener('input', () => this._onSearch(input.value));
 		wrap.appendChild(input);
 		return wrap;
@@ -235,7 +239,10 @@ export class ModelsSection implements SettingsSection {
 			const empty = document.createElement('div');
 			empty.className = 'sidex-settings-row-description';
 			empty.style.padding = '8px 14px';
-			empty.textContent = 'No models added yet. Add a model ID below to enable it.';
+			empty.textContent = localize(
+				'sidexSettingsNoModelsAdded',
+				'No models added yet. Add a model ID below to enable it.'
+			);
 			container.appendChild(empty);
 		}
 	}
@@ -299,7 +306,7 @@ export class ModelsSection implements SettingsSection {
 			const btn = document.createElement('span');
 			btn.className = 'sidex-settings-link';
 			btn.style.cssText = 'font-size:12px;cursor:pointer;';
-			btn.textContent = '+ Add Model';
+			btn.textContent = localize('sidexSettingsAddModel', '+ Add Model');
 			btn.addEventListener('click', () => {
 				this._addingCustom = true;
 				this._updateCustomRow();
@@ -313,7 +320,7 @@ export class ModelsSection implements SettingsSection {
 
 		const idInput = document.createElement('input');
 		idInput.type = 'text';
-		idInput.placeholder = 'Model ID (e.g. anthropic/claude-opus-4.6)';
+		idInput.placeholder = localize('sidexSettingsModelIdPlaceholder', 'Model ID (e.g. anthropic/claude-opus-4.6)');
 
 		const suggestions = document.createElement('div');
 		suggestions.style.cssText =
@@ -327,12 +334,15 @@ export class ModelsSection implements SettingsSection {
 			if (!provider || !this._invoke) {
 				return;
 			}
-			suggestions.textContent = 'Loading models…';
+			suggestions.textContent = localize('sidexSettingsLoadingModels', 'Loading models…');
 			try {
 				const models = ((await this._invoke('providers_list_models', { provider })) as ProviderModel[]) || [];
 				suggestions.innerHTML = '';
 				if (models.length === 0) {
-					suggestions.textContent = 'No models reported yet — enter an ID manually below.';
+					suggestions.textContent = localize(
+						'sidexSettingsNoReportedModels',
+						'No models reported yet — enter an ID manually below.'
+					);
 					return;
 				}
 				// Remember the labels now: picking one should carry its name
@@ -343,7 +353,11 @@ export class ModelsSection implements SettingsSection {
 					}
 				}
 				const label = document.createElement('div');
-				label.textContent = `${models.length} available — pick one, or type your own:`;
+				label.textContent = localize(
+					'sidexSettingsModelsAvailable',
+					'{0} available — pick one, or type your own:',
+					models.length
+				);
 				suggestions.appendChild(label);
 				suggestions.appendChild(
 					this._boundedDropdown(
@@ -357,12 +371,15 @@ export class ModelsSection implements SettingsSection {
 			} catch {
 				// Not configured, offline, or the provider just doesn't support
 				// listing — the manual text input below still works either way.
-				suggestions.textContent = "Couldn't reach this provider to list its models — enter an ID manually below.";
+				suggestions.textContent = localize(
+					'sidexSettingsProviderModelsUnavailable',
+					"Couldn't reach this provider to list its models — enter an ID manually below."
+				);
 			}
 		};
 
 		const providerOptions = [
-			{ value: '', label: 'Custom (any provider)' },
+			{ value: '', label: localize('sidexSettingsCustomProvider', 'Custom (any provider)') },
 			...this._providerCatalog.map(p => ({ value: p.id, label: p.label }))
 		];
 		form.appendChild(
@@ -384,7 +401,7 @@ export class ModelsSection implements SettingsSection {
 		const addBtn = document.createElement('span');
 		addBtn.className = 'sidex-settings-link';
 		addBtn.style.cssText = 'font-size:12px;cursor:pointer;font-weight:500;';
-		addBtn.textContent = 'Add';
+		addBtn.textContent = localize('sidexSettingsAdd', 'Add');
 		addBtn.addEventListener('click', () => {
 			const val = idInput.value.trim();
 			if (val) {
@@ -395,7 +412,7 @@ export class ModelsSection implements SettingsSection {
 
 		const cancelBtn = document.createElement('span');
 		cancelBtn.style.cssText = 'font-size:12px;color:var(--vscode-descriptionForeground);cursor:pointer;';
-		cancelBtn.textContent = 'Cancel';
+		cancelBtn.textContent = localize('sidexSettingsCancel', 'Cancel');
 		cancelBtn.addEventListener('click', () => {
 			this._addingCustom = false;
 			this._addModelProvider = '';
@@ -453,12 +470,15 @@ export class ModelsSection implements SettingsSection {
 		const section = document.createElement('div');
 		const title = document.createElement('div');
 		title.className = 'sidex-settings-section-title';
-		title.textContent = 'API Keys';
+		title.textContent = localize('sidexSettingsApiKeys', 'API Keys');
 		section.appendChild(title);
 
 		const desc = document.createElement('div');
 		desc.className = 'sidex-settings-row-description sidex-settings-section-desc';
-		desc.textContent = 'Configure provider API keys to use models at cost through your own accounts.';
+		desc.textContent = localize(
+			'sidexSettingsApiKeysDescription',
+			'Configure provider API keys to use models at cost through your own accounts.'
+		);
 		section.appendChild(desc);
 
 		const card = document.createElement('div');
@@ -478,7 +498,7 @@ export class ModelsSection implements SettingsSection {
 		if (configured.length > 0) {
 			const header = document.createElement('div');
 			header.className = 'sidex-settings-model-group-header';
-			header.textContent = 'Configured';
+			header.textContent = localize('sidexSettingsConfigured', 'Configured');
 			card.appendChild(header);
 			for (const provider of configured) {
 				card.appendChild(this._buildProviderCard(provider));
@@ -498,7 +518,7 @@ export class ModelsSection implements SettingsSection {
 				chevron.className = 'codicon codicon-chevron-right';
 				disclosureHeader.appendChild(chevron);
 				const disclosureLabel = document.createElement('span');
-				disclosureLabel.textContent = `${rest.length} more provider${rest.length === 1 ? '' : 's'}`;
+				disclosureLabel.textContent = localize('sidexSettingsMoreProviders', '{0} more providers', rest.length);
 				disclosureHeader.appendChild(disclosureLabel);
 				disclosureHeader.addEventListener('click', () => {
 					this._apiKeysExpanded = !this._apiKeysExpanded;
@@ -527,17 +547,33 @@ export class ModelsSection implements SettingsSection {
 	 */
 	private _providerDescriptionHtml(config: ProviderCatalogEntry): string {
 		if (config.keyless) {
-			return `${config.label} doesn't require a key. Set a base URL below if it isn't running at the default location.`;
+			return localize(
+				'sidexSettingsProviderNoKeyDescription',
+				"{0} doesn't require a key. Set a base URL below if it isn't running at the default location.",
+				config.label
+			);
 		}
 		const keyPart = config.consoleUrl
-			? `Get a key from <a href="${config.consoleUrl}" class="sidex-settings-link" target="_blank">${config.label}</a> to use its models at cost.`
-			: `Enter an API key to use ${config.label} models at cost.`;
+			? localize(
+					'sidexSettingsProviderConsoleDescription',
+					'Get a key from <a href="{0}" class="sidex-settings-link" target="_blank">{1}</a> to use its models at cost.',
+					config.consoleUrl,
+					config.label
+				)
+			: localize('sidexSettingsProviderKeyDescription', 'Enter an API key to use {0} models at cost.', config.label);
 		const envPart = config.envVars.length
-			? ` Picked up automatically if ${config.envVars.join(' or ')} is already set in your shell.`
+			? localize(
+					'sidexSettingsProviderEnvironmentDescription',
+					' Picked up automatically if {0} is already set in your shell.',
+					config.envVars.join(' or ')
+				)
 			: '';
 		const baseUrlPart = config.defaultBaseUrl
 			? ''
-			: ' This provider has no default endpoint, so a base URL is required below.';
+			: localize(
+					'sidexSettingsProviderEndpointDescription',
+					' This provider has no default endpoint, so a base URL is required below.'
+				);
 		return keyPart + envPart + baseUrlPart;
 	}
 
@@ -616,12 +652,18 @@ export class ModelsSection implements SettingsSection {
 		}
 		const fields: FieldSpec[] = [];
 		if (!config.keyless) {
-			fields.push({ id: 'apiKey', type: 'password', placeholder: `Enter your ${config.label} API Key` });
+			fields.push({
+				id: 'apiKey',
+				type: 'password',
+				placeholder: localize('sidexSettingsApiKeyPlaceholder', 'Enter your {0} API Key', config.label)
+			});
 		}
 		fields.push({
 			id: 'baseUrl',
 			type: 'text',
-			placeholder: needsBaseUrl ? 'Base URL (required, e.g. https://your-host/v1)' : config.defaultBaseUrl,
+			placeholder: needsBaseUrl
+				? localize('sidexSettingsBaseUrlPlaceholder', 'Base URL (required, e.g. https://your-host/v1)')
+				: config.defaultBaseUrl,
 			prefill: status?.baseUrl && status.baseUrl !== config.defaultBaseUrl ? status.baseUrl : undefined,
 			required: needsBaseUrl
 		});
@@ -726,7 +768,7 @@ export class ModelsSection implements SettingsSection {
 		const link = document.createElement('span');
 		link.className = 'sidex-settings-link';
 		link.style.cssText = 'font-size:11px;cursor:pointer;white-space:nowrap;';
-		link.textContent = 'Import models';
+		link.textContent = localize('sidexSettingsImportModels', 'Import models');
 		wrap.appendChild(link);
 
 		const resultEl = document.createElement('span');
@@ -738,10 +780,13 @@ export class ModelsSection implements SettingsSection {
 			link.style.pointerEvents = 'none';
 			link.style.opacity = '0.5';
 			resultEl.style.color = '';
-			resultEl.textContent = 'Importing…';
+			resultEl.textContent = localize('sidexSettingsImportingModels', 'Importing…');
 			try {
 				const added = await this._adoptModelsFrom(config.id);
-				resultEl.textContent = added > 0 ? `Added ${added} model${added === 1 ? '' : 's'}.` : 'No new models found.';
+				resultEl.textContent =
+					added > 0
+						? localize('sidexSettingsModelsImported', 'Added {0} models.', added)
+						: localize('sidexSettingsNoNewModels', 'No new models found.');
 			} catch (e) {
 				resultEl.textContent = e instanceof Error ? e.message : String(e);
 				resultEl.style.color = 'var(--vscode-editorError-foreground, #f85149)';
@@ -771,12 +816,15 @@ export class ModelsSection implements SettingsSection {
 		const section = document.createElement('div');
 		const title = document.createElement('div');
 		title.className = 'sidex-settings-section-title';
-		title.textContent = 'Detected on this machine';
+		title.textContent = localize('sidexSettingsDetectedOnMachine', 'Detected on this machine');
 		section.appendChild(title);
 
 		const desc = document.createElement('div');
 		desc.className = 'sidex-settings-row-description sidex-settings-section-desc';
-		desc.textContent = 'Credentials and model servers SideX can use without any setup. No account required.';
+		desc.textContent = localize(
+			'sidexSettingsDetectedOnMachineDescription',
+			'Credentials and model servers SideX can use without any setup. No account required.'
+		);
 		section.appendChild(desc);
 
 		const card = document.createElement('div');
@@ -792,8 +840,11 @@ export class ModelsSection implements SettingsSection {
 		if (local.length === 0) {
 			card.appendChild(
 				this._buildInfoRow(
-					'No local model server found',
-					'Start Ollama or LM Studio and reopen this panel to use local models with no key.'
+					localize('sidexSettingsNoLocalModelServer', 'No local model server found'),
+					localize(
+						'sidexSettingsNoLocalModelServerDescription',
+						'Start Ollama or LM Studio and reopen this panel to use local models with no key.'
+					)
 				)
 			);
 		} else {
@@ -801,10 +852,10 @@ export class ModelsSection implements SettingsSection {
 				const count = server.models.length;
 				card.appendChild(
 					this._buildInfoRow(
-						`${server.label} — ready`,
+						localize('sidexSettingsLocalServerReady', '{0} — ready', server.label),
 						count > 0
-							? `${count} model${count === 1 ? '' : 's'} at ${server.baseUrl}`
-							: `Running at ${server.baseUrl}, but no models are pulled yet.`
+							? localize('sidexSettingsServerModels', '{0} models at {1}', count, server.baseUrl)
+							: localize('sidexSettingsServerNoModels', 'Running at {0}, but no models are pulled yet.', server.baseUrl)
 					)
 				);
 			}
@@ -826,7 +877,7 @@ export class ModelsSection implements SettingsSection {
 			}
 			const label = document.createElement('div');
 			label.className = 'sidex-settings-row-label';
-			label.textContent = `${account.displayName} account`;
+			label.textContent = localize('sidexSettingsAccountLabel', '{0} account', account.displayName);
 			labelRow.appendChild(label);
 			infoCol.appendChild(labelRow);
 
@@ -834,9 +885,9 @@ export class ModelsSection implements SettingsSection {
 			action.className = 'sidex-settings-btn';
 			action.style.cssText = 'flex-shrink:0;white-space:nowrap;';
 			if (account.connected) {
-				action.textContent = 'Disconnect';
+				action.textContent = localize('sidexSettingsDisconnect', 'Disconnect');
 			} else {
-				action.textContent = 'Connect';
+				action.textContent = localize('sidexSettingsConnect', 'Connect');
 				action.disabled = !account.available;
 			}
 
@@ -847,15 +898,35 @@ export class ModelsSection implements SettingsSection {
 				? `${account.accountEmail}${account.subscriptionTier ? ` · ${account.subscriptionTier}` : ''}`
 				: (account.subscriptionTier ?? '');
 			if (account.expired) {
-				sub.textContent = `Signed out or expired. Sign in with ${account.displayName} again, then reconnect.`;
+				sub.textContent = localize(
+					'sidexSettingsAccountExpired',
+					'Signed out or expired. Sign in with {0} again, then reconnect.',
+					account.displayName
+				);
 			} else if (account.connected) {
-				sub.textContent = who ? `Connected — ${who}` : `Connected — using the login at ${account.location}`;
+				sub.textContent = who
+					? localize('sidexSettingsConnectedAs', 'Connected — {0}', who)
+					: localize('sidexSettingsConnectedAt', 'Connected — using the login at {0}', account.location);
 			} else if (account.available) {
 				sub.textContent = who
-					? `Signed in as ${who}. Connect to use it for ${account.provider} models.`
-					: `Found at ${account.location}. Connect to use it for ${account.provider} models.`;
+					? localize(
+							'sidexSettingsSignedInAs',
+							'Signed in as {0}. Connect to use it for {1} models.',
+							who,
+							account.provider
+						)
+					: localize(
+							'sidexSettingsAccountFoundAt',
+							'Found at {0}. Connect to use it for {1} models.',
+							account.location,
+							account.provider
+						);
 			} else {
-				sub.textContent = `Not signed in to ${account.displayName} on this machine.`;
+				sub.textContent = localize(
+					'sidexSettingsNotSignedIn',
+					'Not signed in to {0} on this machine.',
+					account.displayName
+				);
 			}
 			infoCol.appendChild(sub);
 
@@ -866,7 +937,7 @@ export class ModelsSection implements SettingsSection {
 				warn.className = 'sidex-settings-row-description';
 				warn.style.cssText =
 					'color:var(--vscode-editorWarning-foreground);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-				warn.textContent = 'Subscription login, not a billed API key.';
+				warn.textContent = localize('sidexSettingsSubscriptionLogin', 'Subscription login, not a billed API key.');
 				infoCol.appendChild(warn);
 			}
 			row.appendChild(infoCol);
@@ -885,8 +956,13 @@ export class ModelsSection implements SettingsSection {
 		for (const p of fromEnv) {
 			card.appendChild(
 				this._buildInfoRow(
-					`${p.label} — using ${p.envVar ?? 'your environment'}`,
-					'Picked up from your shell. A key entered above overrides it.'
+					localize(
+						'sidexSettingsUsingEnvironment',
+						'{0} — using {1}',
+						p.label,
+						p.envVar ?? localize('sidexSettingsYourEnvironment', 'your environment')
+					),
+					localize('sidexSettingsEnvironmentKey', 'Picked up from your shell. A key entered above overrides it.')
 				)
 			);
 		}
@@ -918,32 +994,55 @@ export class ModelsSection implements SettingsSection {
 	private async _confirmAccountChange(account: AccountInfo, connect: boolean): Promise<boolean> {
 		if (!connect) {
 			return showConfirmDialog({
-				title: `Disconnect ${account.displayName}?`,
+				title: localize('sidexSettingsDisconnectAccount', 'Disconnect {0}?', account.displayName),
 				body: [
-					`SideX will stop using your ${account.displayName} login for ${account.provider} models.`,
-					'Your login itself is untouched — this only stops SideX reading it.'
+					localize(
+						'sidexSettingsDisconnectAccountDescription',
+						'SideX will stop using your {0} login for {1} models.',
+						account.displayName,
+						account.provider
+					),
+					localize(
+						'sidexSettingsDisconnectAccountNotice',
+						'Your login itself is untouched — this only stops SideX reading it.'
+					)
 				],
-				confirmLabel: 'Disconnect',
+				confirmLabel: localize('sidexSettingsDisconnect', 'Disconnect'),
 				danger: true
 			});
 		}
 
-		const who = account.accountEmail ?? 'the account signed in on this machine';
+		const who =
+			account.accountEmail ?? localize('sidexSettingsSignedInAccount', 'the account signed in on this machine');
 		const body = [
-			`SideX will use your ${account.displayName} login (${who}) to run ${account.provider} models.`,
-			`The credential is read from ${account.location} and passed only to the agent server running on your own machine. It is never sent anywhere else, and never shown in the app.`
+			localize(
+				'sidexSettingsConnectAccountDescription',
+				'SideX will use your {0} login ({1}) to run {2} models.',
+				account.displayName,
+				who,
+				account.provider
+			),
+			localize(
+				'sidexSettingsConnectAccountNotice',
+				'The credential is read from {0} and passed only to the agent server running on your own machine. It is never sent anywhere else, and never shown in the app.',
+				account.location
+			)
 		];
 
 		return showConfirmDialog({
-			title: `Connect ${account.displayName}?`,
+			title: localize('sidexSettingsConnectAccount', 'Connect {0}?', account.displayName),
 			body,
 			// A subscription login is issued for that product. Say so before the
 			// user commits, not after.
 			caution:
 				account.credentialKind === 'oauth'
-					? `This is a subscription login, not a billed API key. Using it from another app may not be permitted by ${account.displayName}'s terms — entering an API key above avoids that entirely.`
+					? localize(
+							'sidexSettingsSubscriptionCaution',
+							"This is a subscription login, not a billed API key. Using it from another app may not be permitted by {0}'s terms — entering an API key above avoids that entirely.",
+							account.displayName
+						)
 					: undefined,
-			confirmLabel: 'Connect'
+			confirmLabel: localize('sidexSettingsConnect', 'Connect')
 		});
 	}
 
@@ -957,8 +1056,8 @@ export class ModelsSection implements SettingsSection {
 		}
 
 		statusEl.textContent = connect
-			? `Connecting your ${account.displayName} account…`
-			: `Disconnecting your ${account.displayName} account…`;
+			? localize('sidexSettingsConnectingAccount', 'Connecting your {0} account…', account.displayName)
+			: localize('sidexSettingsDisconnectingAccount', 'Disconnecting your {0} account…', account.displayName);
 		statusEl.style.color = '';
 
 		try {
@@ -972,7 +1071,11 @@ export class ModelsSection implements SettingsSection {
 				try {
 					const added = await this._adoptModelsFrom(account.provider);
 					if (added > 0) {
-						statusEl.textContent = `Connected — added ${added} model${added === 1 ? '' : 's'}.`;
+						statusEl.textContent = localize(
+							'sidexSettingsConnectedModelsAdded',
+							'Connected — added {0} models.',
+							added
+						);
 						// Do NOT persist a model here: the user didn't explicitly
 						// choose one. Forcing the first account model into
 						// localStorage pins a stale snapshot ID that survives
@@ -1020,7 +1123,11 @@ export class ModelsSection implements SettingsSection {
 		// every request would just fail. Catch that here instead of letting
 		// the save "succeed" into a provider that can never actually resolve.
 		if (!config.defaultBaseUrl && !baseUrl && !this._providerStatus.get(config.id)?.baseUrl) {
-			return `${config.label} has no default endpoint — enter a base URL to save.`;
+			return localize(
+				'sidexSettingsProviderEndpointRequired',
+				'{0} has no default endpoint — enter a base URL to save.',
+				config.label
+			);
 		}
 
 		try {

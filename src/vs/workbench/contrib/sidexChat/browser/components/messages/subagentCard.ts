@@ -4,6 +4,7 @@
 
 import { Component, DOM, $ } from '../base.js';
 import { Emitter, Event } from '../../../../../../base/common/event.js';
+import { localize } from '../../../../../../nls.js';
 
 export interface SubagentInfo {
 	id: string;
@@ -54,7 +55,7 @@ export class SubagentCard extends Component {
 		model.textContent = this._formatModel(this._info.model);
 
 		this._statusText = DOM.append(header, $('span.sc-subagent-status'));
-		this._statusText.textContent = this._info.status === 'running' ? 'Running...' : 'Completed';
+		this._statusText.textContent = this._statusLabel(this._info.status);
 
 		// Body (shown on expand — like Cursor's subagent detail)
 		this._bodyEl = this.append('div', 'sc-subagent-body');
@@ -73,8 +74,7 @@ export class SubagentCard extends Component {
 			this._info.status = info.status;
 			this._statusDot.classList.remove('sc-subagent-running', 'sc-subagent-completed', 'sc-subagent-failed');
 			this._statusDot.classList.add(`sc-subagent-${info.status}`);
-			this._statusText.textContent =
-				info.status === 'running' ? 'Running...' : info.status === 'completed' ? 'Completed' : 'Failed';
+			this._statusText.textContent = this._statusLabel(info.status);
 		}
 		if (info.toolCalls) {
 			this._info.toolCalls = info.toolCalls;
@@ -131,5 +131,18 @@ export class SubagentCard extends Component {
 			return 'Claude Haiku';
 		}
 		return model.split('.').pop()?.replace(/-/g, ' ') || model;
+	}
+
+	private _statusLabel(status: SubagentInfo['status']): string {
+		switch (status) {
+			case 'running':
+				return localize('sidex.chat.running', 'Running...');
+			case 'completed':
+				return localize('sidex.chat.completed', 'Completed');
+			case 'failed':
+				return localize('sidex.chat.failed', 'Failed');
+			default:
+				return status;
+		}
 	}
 }

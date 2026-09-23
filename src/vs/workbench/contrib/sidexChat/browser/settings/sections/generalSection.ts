@@ -118,30 +118,48 @@ export class GeneralSection implements SettingsSection {
 	}
 
 	private _renderPreferences(container: HTMLElement): void {
-		this._createSectionTitle(container, 'Preferences');
+		this._createSectionTitle(container, nls.localize('sidexSettingsPreferences', 'Preferences'));
 		const card = this._createCard(container);
 
-		const editorRow = this._createRow(card, 'Editor Settings', 'Customize editor appearance and behavior');
-		this._addButton(editorRow, 'Open', () => {
+		const editorRow = this._createRow(
+			card,
+			nls.localize('sidexSettingsEditorSettings', 'Editor Settings'),
+			nls.localize('sidexSettingsEditorSettingsDescription', 'Customize editor appearance and behavior')
+		);
+		this._addButton(editorRow, nls.localize('sidexSettingsOpen', 'Open'), () => {
 			window.dispatchEvent(new CustomEvent('sidex-native-menu', { detail: 'settings' }));
 		});
 
-		const kbRow = this._createRow(card, 'Keyboard Shortcuts', 'Customize keybindings');
-		this._addButton(kbRow, 'Open', () => {
+		const kbRow = this._createRow(
+			card,
+			nls.localize('sidexSettingsKeyboardShortcuts', 'Keyboard Shortcuts'),
+			nls.localize('sidexSettingsKeyboardShortcutsDescription', 'Customize keybindings')
+		);
+		this._addButton(kbRow, nls.localize('sidexSettingsOpen', 'Open'), () => {
 			window.dispatchEvent(new CustomEvent('sidex-native-menu', { detail: 'keybindings' }));
 		});
 
-		const importRow = this._createRow(card, 'Import Settings from VS Code', 'Import your existing configuration');
-		this._addButton(importRow, 'Import', () => {
-			this._showToast('Coming soon — VS Code settings import is not yet available.');
+		const importRow = this._createRow(
+			card,
+			nls.localize('sidexSettingsImportVsCode', 'Import Settings from VS Code'),
+			nls.localize('sidexSettingsImportVsCodeDescription', 'Import your existing configuration')
+		);
+		this._addButton(importRow, nls.localize('sidexSettingsImport', 'Import'), () => {
+			this._showToast(
+				nls.localize('sidexSettingsImportComingSoon', 'Coming soon — VS Code settings import is not yet available.')
+			);
 		});
 
-		const resetRow = this._createRow(card, "Reset Don't Ask Again Dialogs", 'Show previously dismissed dialogs');
-		this._addButton(resetRow, 'Show', () => {
+		const resetRow = this._createRow(
+			card,
+			nls.localize('sidexSettingsResetDismissedDialogs', "Reset Don't Ask Again Dialogs"),
+			nls.localize('sidexSettingsResetDismissedDialogsDescription', 'Show previously dismissed dialogs')
+		);
+		this._addButton(resetRow, nls.localize('sidexSettingsShow', 'Show'), () => {
 			if (this._invoke) {
 				this._invoke('settings_update', { key: 'sidex.general.dismissedDialogs', value: {}, scope: 'user' })
 					.then(() => {
-						this._showToast('All dialogs have been reset.');
+						this._showToast(nls.localize('sidexSettingsDialogsReset', 'All dialogs have been reset.'));
 					})
 					.catch(() => {});
 			}
@@ -212,46 +230,49 @@ export class GeneralSection implements SettingsSection {
 		);
 		const badge = document.createElement('span');
 		badge.className = 'sidex-settings-new-badge';
-		badge.textContent = 'NEW';
+		badge.textContent = nls.localize('sidexSettingsNew', 'NEW');
 		tabsRow.querySelector('.sidex-settings-row-label')!.appendChild(badge);
 	}
 
 	private _renderNotifications(container: HTMLElement): void {
-		this._createSectionTitle(container, 'Notifications');
+		this._createSectionTitle(container, nls.localize('sidexSettingsNotifications', 'Notifications'));
 		const card = this._createCard(container);
 
 		this._addToggleRow(
 			card,
-			'System Notifications',
-			'Show OS-level notifications',
+			nls.localize('sidexSettingsSystemNotifications', 'System Notifications'),
+			nls.localize('sidexSettingsSystemNotificationsDescription', 'Show OS-level notifications'),
 			'sidex.general.systemNotifications',
 			this._getSetting('systemNotifications', true) as boolean
 		);
 
 		this._addToggleRow(
 			card,
-			'Menu Bar Icon',
-			'Show icon in the system tray/menu bar',
+			nls.localize('sidexSettingsMenuBarIcon', 'Menu Bar Icon'),
+			nls.localize('sidexSettingsMenuBarIconDescription', 'Show icon in the system tray/menu bar'),
 			'sidex.general.menuBarIcon',
 			this._getSetting('menuBarIcon', true) as boolean
 		);
 
 		this._addToggleRow(
 			card,
-			'Completion Sound',
-			'Play a sound when operations complete',
+			nls.localize('sidexSettingsCompletionSound', 'Completion Sound'),
+			nls.localize('sidexSettingsCompletionSoundDescription', 'Play a sound when operations complete'),
 			'sidex.general.completionSound',
 			this._getSetting('completionSound', false) as boolean
 		);
 	}
 
 	private _renderPrivacy(container: HTMLElement): void {
-		this._createSectionTitle(container, 'Privacy');
+		this._createSectionTitle(container, nls.localize('sidexSettingsPrivacy', 'Privacy'));
 		const card = this._createCard(container);
 		this._addToggleRow(
 			card,
-			'Data Sharing',
-			'Help improve SideX by sharing anonymous usage data. No code or personal information is ever collected.',
+			nls.localize('sidexSettingsDataSharing', 'Data Sharing'),
+			nls.localize(
+				'sidexSettingsDataSharingDescription',
+				'Help improve SideX by sharing anonymous usage data. No code or personal information is ever collected.'
+			),
 			'sidex.general.dataSharing',
 			this._getSetting('dataSharing', true) as boolean
 		);
@@ -300,7 +321,7 @@ export class GeneralSection implements SettingsSection {
 					'Add a model in the Models section to set a default for new conversations.'
 				)
 			);
-			this._addButton(row, 'Configure Models', () => {
+			this._addButton(row, nls.localize('sidexConfigureModels', 'Configure Models'), () => {
 				window.dispatchEvent(new CustomEvent('sidex-settings-navigate', { detail: 'models' }));
 			});
 			return;

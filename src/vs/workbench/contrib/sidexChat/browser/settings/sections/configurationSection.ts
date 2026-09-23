@@ -6,6 +6,7 @@
 
 import type { SettingsSection } from '../sidexSettingsPanel.js';
 import { createCustomDropdown } from '../sidexSettingsStyles.js';
+import { localize } from '../../../../../../nls.js';
 
 type TauriInvoke = ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null;
 
@@ -76,7 +77,7 @@ export class ConfigurationSection implements SettingsSection {
 
 		const title = document.createElement('div');
 		title.className = 'sidex-settings-section-title';
-		title.textContent = 'Configuration';
+		title.textContent = localize('sidexSettingsConfiguration', 'Configuration');
 		container.appendChild(title);
 
 		const card1 = document.createElement('div');
@@ -85,32 +86,44 @@ export class ConfigurationSection implements SettingsSection {
 		// 1. Allow Sidex in background
 		const bgRow = this._createRow(
 			card1,
-			'Allow Sidex in background',
-			'Sidex keeps running when you switch conversations. Terminal commands may run in the background depending on your auto execution setting'
+			localize('sidexSettingsAllowBackground', 'Allow SideX in background'),
+			localize(
+				'sidexSettingsAllowBackgroundDescription',
+				'SideX keeps running when you switch conversations. Terminal commands may run in the background depending on your auto execution setting.'
+			)
 		);
 		this._addToggle(bgRow, this._getSetting('background', true) as boolean, 'sidex.cascade.background');
 
 		// 2. Auto-open edited files
 		const openFilesRow = this._createRow(
 			card1,
-			'Auto-open edited files',
-			'Open files in the background if Sidex creates or edits them'
+			localize('sidexSettingsAutoOpenEditedFiles', 'Auto-open edited files'),
+			localize(
+				'sidexSettingsAutoOpenEditedFilesDescription',
+				'Open files in the background if SideX creates or edits them.'
+			)
 		);
 		this._addToggle(openFilesRow, this._getSetting('autoOpenFiles', true) as boolean, 'sidex.cascade.autoOpenFiles');
 
 		// 3. Sidex preview
 		const previewsRow = this._createRow(
 			card1,
-			'Sidex preview',
-			'Sidex opens browser previews of dev servers it starts, integrating tightly with your workflow'
+			localize('sidexSettingsPreview', 'SideX preview'),
+			localize(
+				'sidexSettingsPreviewDescription',
+				'SideX opens browser previews of dev servers it starts, integrating tightly with your workflow.'
+			)
 		);
 		this._addToggle(previewsRow, this._getSetting('previews', true) as boolean, 'sidex.cascade.previews');
 
 		// 4. Gitignore access
 		const gitignoreRow = this._createRow(
 			card1,
-			'Gitignore access',
-			'Let Sidex, tab, and supercomplete view and edit files in .gitignore'
+			localize('sidexSettingsGitignoreAccess', 'Gitignore access'),
+			localize(
+				'sidexSettingsGitignoreAccessDescription',
+				'Let SideX, Tab, and Supercomplete view and edit files in .gitignore.'
+			)
 		);
 		this._addToggle(
 			gitignoreRow,
@@ -127,12 +140,19 @@ export class ConfigurationSection implements SettingsSection {
 		// 15. Auto web requests policy
 		const reqRow = this._createRow(
 			card3,
-			'Auto web requests',
-			'Disabled (manual approval), Allowlist (only approved origins), Turbo (always fetch)'
+			localize('sidexSettingsAutoWebRequests', 'Auto web requests'),
+			localize(
+				'sidexSettingsAutoWebRequestsDescription',
+				'Disabled (manual approval), Allowlist (only approved origins), Turbo (always fetch)'
+			)
 		);
 		this._addSelect(
 			reqRow,
-			['Disabled', 'Allowlist', 'Turbo'],
+			[
+				{ value: 'Disabled', label: localize('sidexSettingsDisabled', 'Disabled') },
+				{ value: 'Allowlist', label: localize('sidexSettingsAllowlist', 'Allowlist') },
+				{ value: 'Turbo', label: localize('sidexSettingsTurbo', 'Turbo') }
+			],
 			this._getSetting('autoWebRequestsPolicy', 'Allowlist') as string,
 			'sidex.cascade.autoWebRequestsPolicy'
 		);
@@ -208,7 +228,12 @@ export class ConfigurationSection implements SettingsSection {
 		return toggle;
 	}
 
-	private _addSelect(row: HTMLElement, options: string[], defaultValue: string, settingKey: string): HTMLElement {
+	private _addSelect(
+		row: HTMLElement,
+		options: Array<string | { value: string; label: string }>,
+		defaultValue: string,
+		settingKey: string
+	): HTMLElement {
 		const dropdown = createCustomDropdown(options, defaultValue, newValue => {
 			if (this._invoke) {
 				this._invoke('settings_update', { key: settingKey, value: newValue, scope: 'user' }).catch(() => {});
@@ -245,9 +270,15 @@ export class ConfigurationSection implements SettingsSection {
 
 		const addBtn = document.createElement('button');
 		addBtn.className = 'sidex-settings-btn';
-		addBtn.textContent = 'Add';
+		addBtn.textContent = localize('sidexSettingsAdd', 'Add');
 		addBtn.addEventListener('click', () => {
-			const val = prompt(`Enter command pattern to add to ${label} (e.g. "git *" or "npm run test"):`);
+			const val = prompt(
+				localize(
+					'sidexSettingsAddCommandPattern',
+					'Enter command pattern to add to {0} (e.g. "git *" or "npm run test"):',
+					label
+				)
+			);
 			if (val && val.trim()) {
 				list.push(val.trim());
 				this._saveLists(key, list);
@@ -268,7 +299,7 @@ export class ConfigurationSection implements SettingsSection {
 			const empty = document.createElement('div');
 			empty.style.cssText =
 				'display:flex; align-items:center; justify-content:center; height:120px; font-size:12px; color:var(--vscode-descriptionForeground);';
-			empty.textContent = 'No items';
+			empty.textContent = localize('sidexSettingsNoItems', 'No items');
 			listScroll.appendChild(empty);
 		} else {
 			list.forEach((item, idx) => {
@@ -286,7 +317,7 @@ export class ConfigurationSection implements SettingsSection {
 				const editBtn = document.createElement('span');
 				editBtn.className = 'codicon codicon-edit sidex-settings-list-action-btn';
 				editBtn.addEventListener('click', () => {
-					const val = prompt(`Edit command pattern:`, item);
+					const val = prompt(localize('sidexSettingsEditCommandPattern', 'Edit command pattern:'), item);
 					if (val && val.trim()) {
 						list[idx] = val.trim();
 						this._saveLists(key, list);
@@ -321,8 +352,10 @@ export class ConfigurationSection implements SettingsSection {
 		const textDesc = document.createElement('p');
 		textDesc.style.cssText =
 			'font-size:12px; color:var(--vscode-descriptionForeground); margin:0 0 12px; line-height:1.5;';
-		textDesc.textContent =
-			'Origins must include the scheme and port if non-default (e.g., "https://github.com" or "http://localhost:3000").';
+		textDesc.textContent = localize(
+			'sidexSettingsOriginsHint',
+			'Origins must include the scheme and port if non-default (e.g., "https://github.com" or "http://localhost:3000").'
+		);
 		container.appendChild(textDesc);
 
 		const header = document.createElement('div');
@@ -331,19 +364,21 @@ export class ConfigurationSection implements SettingsSection {
 		const title = document.createElement('div');
 		const lbl = document.createElement('div');
 		lbl.style.cssText = 'font-size:13px; font-weight:500; color:var(--vscode-foreground);';
-		lbl.textContent = 'Allowed origins';
+		lbl.textContent = localize('sidexSettingsAllowedOrigins', 'Allowed origins');
 		const desc = document.createElement('div');
 		desc.className = 'sidex-settings-row-description';
-		desc.textContent = 'Origins Sidex auto-fetches URLs from';
+		desc.textContent = localize('sidexSettingsAllowedOriginsDescription', 'Origins SideX auto-fetches URLs from');
 		title.appendChild(lbl);
 		title.appendChild(desc);
 		header.appendChild(title);
 
 		const addBtn = document.createElement('button');
 		addBtn.className = 'sidex-settings-btn';
-		addBtn.textContent = 'Add';
+		addBtn.textContent = localize('sidexSettingsAdd', 'Add');
 		addBtn.addEventListener('click', () => {
-			const val = prompt('Enter origin URL to add (e.g. "https://api.github.com"):');
+			const val = prompt(
+				localize('sidexSettingsAddOrigin', 'Enter origin URL to add (e.g. "https://api.github.com"):')
+			);
 			if (val && val.trim()) {
 				this._origins.push(val.trim());
 				this._saveLists('allowedOrigins', this._origins);
@@ -364,7 +399,7 @@ export class ConfigurationSection implements SettingsSection {
 			const empty = document.createElement('div');
 			empty.style.cssText =
 				'display:flex; align-items:center; justify-content:center; height:120px; font-size:12px; color:var(--vscode-descriptionForeground);';
-			empty.textContent = 'No items';
+			empty.textContent = localize('sidexSettingsNoItems', 'No items');
 			listScroll.appendChild(empty);
 		} else {
 			this._origins.forEach((origin, idx) => {
@@ -382,7 +417,7 @@ export class ConfigurationSection implements SettingsSection {
 				const editBtn = document.createElement('span');
 				editBtn.className = 'codicon codicon-edit sidex-settings-list-action-btn';
 				editBtn.addEventListener('click', () => {
-					const val = prompt('Edit origin URL:', origin);
+					const val = prompt(localize('sidexSettingsEditOrigin', 'Edit origin URL:'), origin);
 					if (val && val.trim()) {
 						this._origins[idx] = val.trim();
 						this._saveLists('allowedOrigins', this._origins);
@@ -413,26 +448,33 @@ export class ConfigurationSection implements SettingsSection {
 
 		const importBtn = document.createElement('button');
 		importBtn.className = 'sidex-settings-btn';
-		importBtn.textContent = 'Import';
+		importBtn.textContent = localize('sidexSettingsImport', 'Import');
 		importBtn.addEventListener('click', () => {
-			alert('Import allowed origins CSV/TXT...');
+			alert(localize('sidexSettingsImportOrigins', 'Import allowed origins CSV/TXT...'));
 		});
 		footer.appendChild(importBtn);
 
 		const exportBtn = document.createElement('button');
 		exportBtn.className = 'sidex-settings-btn';
-		exportBtn.textContent = 'Export';
+		exportBtn.textContent = localize('sidexSettingsExport', 'Export');
 		exportBtn.addEventListener('click', () => {
-			alert('Exporting allowed origins list as CSV...');
+			alert(localize('sidexSettingsExportOrigins', 'Exporting allowed origins list as CSV...'));
 		});
 		footer.appendChild(exportBtn);
 
 		const resetBtn = document.createElement('button');
 		resetBtn.className = 'sidex-settings-btn';
 		resetBtn.style.marginLeft = 'auto';
-		resetBtn.textContent = 'Reset to defaults';
+		resetBtn.textContent = localize('sidexSettingsResetDefaults', 'Reset to defaults');
 		resetBtn.addEventListener('click', () => {
-			if (confirm('Are you sure you want to reset allowed origins back to defaults?')) {
+			if (
+				confirm(
+					localize(
+						'sidexSettingsResetOriginsConfirmation',
+						'Are you sure you want to reset allowed origins back to defaults?'
+					)
+				)
+			) {
 				this._origins = [...DEFAULT_ORIGINS];
 				this._saveLists('allowedOrigins', this._origins);
 				this._renderOriginsSection();

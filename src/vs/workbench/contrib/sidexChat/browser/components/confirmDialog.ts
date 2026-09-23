@@ -6,6 +6,7 @@
 
 import { Component, DOM, $ } from './base.js';
 import { Emitter, Event } from '../../../../../base/common/event.js';
+import { localize } from '../../../../../nls.js';
 
 export interface IConfirmDialogOptions {
 	title: string;
@@ -67,7 +68,7 @@ export class ConfirmDialog extends Component {
 
 		const cancelBtn = DOM.append(buttons, $('button.sc-confirm-btn.sc-confirm-cancel')) as HTMLButtonElement;
 		cancelBtn.type = 'button';
-		cancelBtn.textContent = options.cancelLabel ?? 'Cancel';
+		cancelBtn.textContent = options.cancelLabel ?? localize('sidex.chat.cancel', 'Cancel');
 		this.on(cancelBtn, 'click', () => this._close(false));
 
 		const confirmBtn = DOM.append(buttons, $('button.sc-confirm-btn.sc-confirm-confirm')) as HTMLButtonElement;

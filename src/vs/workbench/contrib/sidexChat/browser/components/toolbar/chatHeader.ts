@@ -3,6 +3,7 @@ import { Emitter, Event } from '../../../../../../base/common/event.js';
 import { Codicon } from '../../../../../../base/common/codicons.js';
 import { ThemeIcon } from '../../../../../../base/common/themables.js';
 import { IAccountService } from '../../account/accountService.js';
+import { localize } from '../../../../../../nls.js';
 
 function icon(codicon: ThemeIcon): HTMLSpanElement {
 	const el = document.createElement('span');
@@ -65,7 +66,7 @@ export class ChatHeader extends Component {
 
 		// + New Chat (left side)
 		const newBtn = this.append('button', 'sc-header-btn');
-		newBtn.title = 'New Chat';
+		newBtn.title = localize('sidex.chat.newChat', 'New Chat');
 		newBtn.appendChild(icon(Codicon.add));
 		this.on(newBtn, 'click', () => this._onNewChat.fire());
 
@@ -73,7 +74,7 @@ export class ChatHeader extends Component {
 		this._searchBar = this.append('div', 'sc-header-search');
 		this._searchInput = DOM.append(this._searchBar, $('input.sc-header-search-input')) as HTMLInputElement;
 		this._searchInput.type = 'text';
-		this._searchInput.placeholder = 'Search chats...';
+		this._searchInput.placeholder = localize('sidex.chat.searchChats', 'Search chats...');
 
 		// History dropdown panel (child of search bar for positioning)
 		this._historyPanel = DOM.append(this._searchBar, $('div.sc-history-panel'));
@@ -82,11 +83,11 @@ export class ChatHeader extends Component {
 		// Item context menu (shared, repositioned per item)
 		this._itemContextMenu = DOM.append(this._historyPanel, $('div.sc-item-context-menu'));
 		const contextActions: Array<{ id: string; label: string; codicon: ThemeIcon }> = [
-			{ id: 'pin', label: 'Pin', codicon: Codicon.pin },
-			{ id: 'archive', label: 'Archive', codicon: Codicon.archive },
+			{ id: 'pin', label: localize('sidex.chat.pin', 'Pin'), codicon: Codicon.pin },
+			{ id: 'archive', label: localize('sidex.chat.archive', 'Archive'), codicon: Codicon.archive },
 			{ id: 'separator', label: '', codicon: Codicon.dash },
-			{ id: 'rename', label: 'Rename', codicon: Codicon.edit },
-			{ id: 'delete', label: 'Delete', codicon: Codicon.trashcan }
+			{ id: 'rename', label: localize('sidex.chat.rename', 'Rename'), codicon: Codicon.edit },
+			{ id: 'delete', label: localize('sidex.chat.delete', 'Delete'), codicon: Codicon.trashcan }
 		];
 		for (const action of contextActions) {
 			if (action.id === 'separator') {
@@ -141,20 +142,28 @@ export class ChatHeader extends Component {
 
 		// ... Menu (right side)
 		this._menuBtn = this.append('button', 'sc-header-btn');
-		this._menuBtn.title = 'More';
+		this._menuBtn.title = localize('sidex.chat.more', 'More');
 		this._menuBtn.appendChild(icon(Codicon.ellipsis));
 		this.on(this._menuBtn, 'click', () => this._toggleMenu());
 
 		// Menu dropdown panel (child of header for left-aligned snapping)
 		this._menuPanel = DOM.append(this.element, $('div.sc-menu-panel'));
 		const menuItems: Array<{ id: string; label: string; codicon: ThemeIcon; disabled?: boolean }> = [
-			{ id: 'open_browser', label: 'Open Browser', codicon: Codicon.browser },
+			{ id: 'open_browser', label: localize('sidex.chat.openBrowser', 'Open Browser'), codicon: Codicon.browser },
 			{ id: 'separator', label: '', codicon: Codicon.dash },
-			{ id: 'usage', label: 'Usage', codicon: Codicon.dashboard },
+			{ id: 'usage', label: localize('sidex.chat.usage', 'Usage'), codicon: Codicon.dashboard },
 			{ id: 'separator', label: '', codicon: Codicon.dash },
-			{ id: 'configure_rules', label: 'Configure Rules', codicon: Codicon.notebook },
-			{ id: 'configure_skills', label: 'Configure Skills', codicon: Codicon.book },
-			{ id: 'edit_memories', label: 'Edit Memories', codicon: Codicon.lightbulb }
+			{
+				id: 'configure_rules',
+				label: localize('sidex.chat.configureRules', 'Configure Rules'),
+				codicon: Codicon.notebook
+			},
+			{
+				id: 'configure_skills',
+				label: localize('sidex.chat.configureSkills', 'Configure Skills'),
+				codicon: Codicon.book
+			},
+			{ id: 'edit_memories', label: localize('sidex.chat.editMemories', 'Edit Memories'), codicon: Codicon.lightbulb }
 		];
 		for (const item of menuItems) {
 			if (item.id === 'separator') {
@@ -184,11 +193,11 @@ export class ChatHeader extends Component {
 		// Bottom MCP status bar (Cursor/Windsurf style)
 		const mcpBar = DOM.append(this._menuPanel, $('div.sc-menu-mcp-bar'));
 		const mcpLeft = DOM.append(mcpBar, $('div.sc-menu-mcp-left'));
-		mcpLeft.textContent = '0 MCPs';
+		mcpLeft.textContent = localize('sidex.chat.mcps', '{0} MCPs', 0);
 
 		const mcpRight = DOM.append(mcpBar, $('div.sc-menu-mcp-right'));
 		const gearBtn = DOM.append(mcpRight, $('button.sc-menu-mcp-btn'));
-		gearBtn.title = 'Configure MCP Servers';
+		gearBtn.title = localize('sidex.chat.configureMcpServers', 'Configure MCP Servers');
 		gearBtn.appendChild(icon(Codicon.settingsGear));
 		this.on(gearBtn, 'click', e => {
 			e.stopPropagation();
@@ -208,7 +217,7 @@ export class ChatHeader extends Component {
 							: typeof servers === 'object' && servers
 								? Object.keys(servers).length
 								: 0;
-						mcpLeft.textContent = `${count} MCPs`;
+						mcpLeft.textContent = localize('sidex.chat.mcps', '{0} MCPs', count);
 					})
 					.catch(() => {});
 			}
@@ -246,7 +255,7 @@ export class ChatHeader extends Component {
 		DOM.clearNode(this._historyList);
 		if (sessions.length === 0) {
 			const empty = DOM.append(this._historyList, $('div.sc-history-empty'));
-			empty.textContent = 'No past chats';
+			empty.textContent = localize('sidex.chat.noPastChats', 'No past chats');
 			return;
 		}
 		for (const s of sessions) {
@@ -254,7 +263,7 @@ export class ChatHeader extends Component {
 			row.dataset.id = s.id;
 			row.dataset.title = (s.title || '').toLowerCase();
 			const titleEl = DOM.append(row, $('span.sc-history-title'));
-			titleEl.textContent = s.title || 'Untitled';
+			titleEl.textContent = s.title || localize('sidex.chat.untitled', 'Untitled');
 			if (s.updated_at) {
 				const dateEl = DOM.append(row, $('span.sc-history-date'));
 				dateEl.textContent = new Date(s.updated_at).toLocaleDateString();
@@ -262,16 +271,16 @@ export class ChatHeader extends Component {
 
 			const actions = DOM.append(row, $('div.sc-history-actions'));
 			const moreBtn = DOM.append(actions, $('button.sc-history-action-btn'));
-			moreBtn.title = 'More';
+			moreBtn.title = localize('sidex.chat.more', 'More');
 			moreBtn.appendChild(icon(Codicon.ellipsis));
 			const pinBtn = DOM.append(actions, $('button.sc-history-action-btn'));
-			pinBtn.title = 'Pin';
+			pinBtn.title = localize('sidex.chat.pin', 'Pin');
 			pinBtn.appendChild(icon(Codicon.pin));
 			if (s.pinned) {
 				pinBtn.classList.add('active');
 			}
 			const archiveBtn = DOM.append(actions, $('button.sc-history-action-btn'));
-			archiveBtn.title = 'Archive';
+			archiveBtn.title = localize('sidex.chat.archive', 'Archive');
 			archiveBtn.appendChild(icon(Codicon.archive));
 
 			this.on(pinBtn, 'click', e => {

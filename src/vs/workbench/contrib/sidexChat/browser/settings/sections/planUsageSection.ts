@@ -4,6 +4,7 @@
 
 import type { SettingsSection } from '../sidexSettingsPanel.js';
 import { createProductMark, productMarkKind } from '../productMarks.js';
+import { localize } from '../../../../../../nls.js';
 
 type TauriInvoke = ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null;
 
@@ -52,17 +53,17 @@ export class PlanUsageSection implements SettingsSection {
 	async render(container: HTMLElement): Promise<void> {
 		const title = document.createElement('div');
 		title.className = 'sidex-settings-section-title no-border';
-		title.textContent = 'Usage';
+		title.textContent = localize('sidexSettingsUsage', 'Usage');
 		container.appendChild(title);
 
 		if (!this._invoke) {
-			this._renderError(container, 'Tauri not available.');
+			this._renderError(container, localize('sidexSettingsTauriUnavailable', 'Tauri not available.'));
 			return;
 		}
 
 		const loading = document.createElement('div');
 		loading.style.cssText = 'font-size:12px;padding:8px 24px;color:var(--vscode-descriptionForeground);';
-		loading.textContent = 'Loading…';
+		loading.textContent = localize('sidexSettingsLoading', 'Loading…');
 		container.appendChild(loading);
 
 		let usage: TauriUsage | null = null;
@@ -75,7 +76,7 @@ export class PlanUsageSection implements SettingsSection {
 		loading.remove();
 
 		if (!usage) {
-			this._renderError(container, 'Usage data is unavailable.');
+			this._renderError(container, localize('sidexSettingsUsageUnavailable', 'Usage data is unavailable.'));
 			return;
 		}
 
@@ -125,7 +126,7 @@ export class PlanUsageSection implements SettingsSection {
 			if (!isCodexAccount(account) || !/week/i.test(`${window.id} ${window.label}`)) {
 				return window;
 			}
-			return { ...window, id: 'monthly', label: 'Monthly' };
+			return { ...window, id: 'monthly', label: localize('sidexSettingsMonthly', 'Monthly') };
 		});
 		if (windows.length === 0 && !account.extraCredits && !account.unavailable) {
 			const empty = document.createElement('div');
@@ -133,8 +134,14 @@ export class PlanUsageSection implements SettingsSection {
 			empty.style.padding = '0 16px 12px';
 			empty.textContent =
 				account.source === 'oauth'
-					? 'Plan limits will show here after this account answers a usage request.'
-					: 'API keys have no 5-hour or weekly session cap — spend below is what SideX recorded.';
+					? localize(
+							'sidexSettingsPlanLimitsUnavailable',
+							'Plan limits will show here after this account answers a usage request.'
+						)
+					: localize(
+							'sidexSettingsApiKeyUsageDescription',
+							'API keys have no 5-hour or weekly session cap — spend below is what SideX recorded.'
+						);
 			card.appendChild(empty);
 		}
 
@@ -151,9 +158,11 @@ export class PlanUsageSection implements SettingsSection {
 					credits != null && credits > 0
 						? `${credits.toLocaleString(undefined, { maximumFractionDigits: 2 })} credits`
 						: '';
-				card.appendChild(moneyRow('Extra usage', formatUSD(usd), detail));
+				card.appendChild(moneyRow(localize('sidexSettingsExtraUsage', 'Extra usage'), formatUSD(usd), detail));
 			} else {
-				card.appendChild(meterRow('Extra usage', extra.usedPercent, extraCreditDetail(extra)));
+				card.appendChild(
+					meterRow(localize('sidexSettingsExtraUsage', 'Extra usage'), extra.usedPercent, extraCreditDetail(extra))
+				);
 			}
 		}
 
@@ -170,11 +179,17 @@ export class PlanUsageSection implements SettingsSection {
 		const tokensLeft = document.createElement('div');
 		const tokensLabel = document.createElement('div');
 		tokensLabel.className = 'sidex-settings-row-label';
-		tokensLabel.textContent = 'Tokens in SideX';
+		tokensLabel.textContent = localize('sidexSettingsTokensInSidex', 'Tokens in SideX');
 		tokensLeft.appendChild(tokensLabel);
 		const tokensDesc = document.createElement('div');
 		tokensDesc.className = 'sidex-settings-row-description';
-		tokensDesc.textContent = `${Number(account.inputTokens || 0).toLocaleString()} in / ${Number(account.outputTokens || 0).toLocaleString()} out · ${formatUSD(account.cost || 0)}`;
+		tokensDesc.textContent = localize(
+			'sidexSettingsTokensDirection',
+			'{0} in / {1} out · {2}',
+			Number(account.inputTokens || 0).toLocaleString(),
+			Number(account.outputTokens || 0).toLocaleString(),
+			formatUSD(account.cost || 0)
+		);
 		tokensLeft.appendChild(tokensDesc);
 		tokensRow.appendChild(tokensLeft);
 		card.appendChild(tokensRow);
@@ -191,12 +206,17 @@ export class PlanUsageSection implements SettingsSection {
 		const tokensLeft = document.createElement('div');
 		const tokensLabel = document.createElement('div');
 		tokensLabel.className = 'sidex-settings-row-label';
-		tokensLabel.textContent = 'All providers';
+		tokensLabel.textContent = localize('sidexSettingsAllProviders', 'All providers');
 		tokensLeft.appendChild(tokensLabel);
 
 		const tokensDesc = document.createElement('div');
 		tokensDesc.className = 'sidex-settings-row-description';
-		tokensDesc.textContent = `${Number(usage.totalInputTokens || 0).toLocaleString()} in / ${Number(usage.totalOutputTokens || 0).toLocaleString()} out`;
+		tokensDesc.textContent = localize(
+			'sidexSettingsTokensDirectionNoCost',
+			'{0} in / {1} out',
+			Number(usage.totalInputTokens || 0).toLocaleString(),
+			Number(usage.totalOutputTokens || 0).toLocaleString()
+		);
 		tokensLeft.appendChild(tokensDesc);
 		tokensRow.appendChild(tokensLeft);
 
@@ -219,14 +239,17 @@ export class PlanUsageSection implements SettingsSection {
 		const actionDesc = document.createElement('div');
 		actionDesc.className = 'sidex-settings-row-description';
 		actionDesc.style.cssText = 'min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-		actionDesc.textContent = 'Session bars come from the connected Claude Code or Codex account.';
+		actionDesc.textContent = localize(
+			'sidexSettingsUsageSourceDescription',
+			'Session bars come from the connected Claude Code or Codex account.'
+		);
 		actionRow.appendChild(actionDesc);
 
 		const configureBtn = document.createElement('button');
 		configureBtn.className = 'sidex-settings-btn';
 		configureBtn.style.whiteSpace = 'nowrap';
 		configureBtn.style.flexShrink = '0';
-		configureBtn.textContent = 'Configure Providers';
+		configureBtn.textContent = localize('sidex.chat.configureProviders', 'Configure Providers');
 		configureBtn.addEventListener('click', () => {
 			window.dispatchEvent(new CustomEvent('sidex-settings-navigate', { detail: 'models' }));
 		});
@@ -355,44 +378,63 @@ function formatReset(iso?: string): string {
 	const when = new Date(t);
 	const now = Date.now();
 	if (t <= now) {
-		return `Resets ${when.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+		return localize(
+			'sidexSettingsResetsAt',
+			'Resets {0}',
+			when.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+		);
 	}
 	const ms = t - now;
 	const hours = Math.round(ms / 3_600_000);
 	if (hours < 1) {
 		const mins = Math.max(1, Math.round(ms / 60_000));
-		return `Resets in ${mins} min`;
+		return localize('sidexSettingsResetsInMinutes', 'Resets in {0} min', mins);
 	}
 	if (hours < 48) {
-		return `Resets in ${hours}h · ${when.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}`;
+		return localize(
+			'sidexSettingsResetsInHours',
+			'Resets in {0}h · {1}',
+			hours,
+			when.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+		);
 	}
-	return `Resets ${when.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+	return localize(
+		'sidexSettingsResetsAt',
+		'Resets {0}',
+		when.toLocaleString(undefined, {
+			weekday: 'short',
+			month: 'short',
+			day: 'numeric',
+			hour: 'numeric',
+			minute: '2-digit'
+		})
+	);
 }
 
 function extraCreditDetail(extra: ExtraCredits): string {
 	const usd = extraUsdRemaining(extra);
 	if (usd != null) {
-		return `${formatUSD(usd)} remaining`;
+		return localize('sidexSettingsRemaining', '{0} remaining', formatUSD(usd));
 	}
 	if (extra.limit > 0) {
-		return `${formatUSD(extra.used)} of ${formatUSD(extra.limit)}`;
+		return localize('sidexSettingsUsageOfLimit', '{0} of {1}', formatUSD(extra.used), formatUSD(extra.limit));
 	}
 	if (!extra.enabled) {
-		return 'Not enabled on this plan';
+		return localize('sidexSettingsNotEnabledOnPlan', 'Not enabled on this plan');
 	}
-	return extra.enabled ? 'Enabled' : '';
+	return extra.enabled ? localize('sidexSettingsEnabled', 'Enabled') : '';
 }
 
 function sourceLabel(source: string): string {
 	switch (source) {
 		case 'oauth':
-			return 'Connected account';
+			return localize('sidexSettingsConnectedAccount', 'Connected account');
 		case 'api_key':
-			return 'API key';
+			return localize('sidexSettingsApiKey', 'API key');
 		case 'local':
-			return 'Local server';
+			return localize('sidex.chat.localServer', 'Local server');
 		default:
-			return 'Recorded in SideX';
+			return localize('sidexSettingsRecordedInSidex', 'Recorded in SideX');
 	}
 }
 

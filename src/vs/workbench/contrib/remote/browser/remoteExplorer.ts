@@ -435,7 +435,7 @@ export class RemoteExplorerViewPane extends ViewPane {
 		const children: RemoteLeafItem[] = distros.map(distro => ({
 			kind: 'leaf' as const,
 			id: `wsl-${distro.name}`,
-			label: `${distro.name}${distro.isDefault ? ' (Default)' : ''}`,
+			label: `${distro.name}${distro.isDefault ? ` ${localize('remote.wsl.default', '(default)')}` : ''}`,
 			description: `WSL${distro.version} • ${distro.state}`,
 			icon: Codicon.terminalLinux,
 			active: false,

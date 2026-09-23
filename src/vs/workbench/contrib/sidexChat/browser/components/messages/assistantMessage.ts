@@ -9,6 +9,7 @@ import { ToolCallItem, FileEditInfo } from '../tools/toolCallItem.js';
 import { ThinkingBlock } from './thinkingBlock.js';
 import { ILanguageService } from '../../../../../../editor/common/languages/language.js';
 import { IModelService } from '../../../../../../editor/common/services/model.js';
+import { localize } from '../../../../../../nls.js';
 
 const EDIT_TOOL_NAMES = new Set([
 	'edit_file',
@@ -123,7 +124,7 @@ export class AssistantMessage extends Component {
 		if (msg.content) {
 			const menuBtn = this.append('div', 'sc-msg-menu');
 			const dots = DOM.append(menuBtn, $('button.sc-msg-menu-btn'));
-			dots.title = 'Copy';
+			dots.title = localize('sidex.chat.copy', 'Copy');
 			const dotsIcon = document.createElement('span');
 			dotsIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.ellipsis));
 			dots.appendChild(dotsIcon);

@@ -272,7 +272,7 @@ export class SidexSettingsPanel extends Disposable {
 		const stBtn = document.createElement('a');
 		stBtn.className = 'action-label codicon codicon-layout-sidebar-left';
 		stBtn.setAttribute('role', 'button');
-		stBtn.setAttribute('aria-label', 'Toggle Sidebar');
+		stBtn.setAttribute('aria-label', nls.localize('sidexSettingsToggleSidebar', 'Toggle Sidebar'));
 		stBtn.tabIndex = 0;
 		stItem.appendChild(stBtn);
 		stActions.appendChild(stItem);
@@ -286,7 +286,7 @@ export class SidexSettingsPanel extends Disposable {
 		title.id = 'sidex-modal-editor-title';
 		const iconLabel = document.createElement('div');
 		iconLabel.className = 'monaco-icon-label codicon-settings-editor-label-icon predefined-file-icon';
-		iconLabel.setAttribute('aria-label', 'settingseditor');
+		iconLabel.setAttribute('aria-label', nls.localize('sidexSettingsEditor', 'settingseditor'));
 		iconLabel.setAttribute('custom-hover', 'true');
 		const labelContainer = document.createElement('div');
 		labelContainer.className = 'monaco-icon-label-container';
@@ -294,7 +294,7 @@ export class SidexSettingsPanel extends Disposable {
 		nameContainer.className = 'monaco-icon-name-container';
 		const labelName = document.createElement('a');
 		labelName.className = 'label-name';
-		labelName.textContent = 'Settings';
+		labelName.textContent = nls.localize('sidexSettingsTitle', 'Settings');
 		nameContainer.appendChild(labelName);
 		labelContainer.appendChild(nameContainer);
 		iconLabel.appendChild(labelContainer);
@@ -312,7 +312,7 @@ export class SidexSettingsPanel extends Disposable {
 		prevBtn.setAttribute('role', 'button');
 		prevBtn.setAttribute('custom-hover', 'true');
 		prevBtn.setAttribute('aria-disabled', 'false');
-		prevBtn.setAttribute('aria-label', 'Previous');
+		prevBtn.setAttribute('aria-label', nls.localize('sidexSettingsPrevious', 'Previous'));
 		nav.appendChild(prevBtn);
 		const navLabel = document.createElement('span');
 		navLabel.className = 'modal-editor-nav-label';
@@ -324,7 +324,7 @@ export class SidexSettingsPanel extends Disposable {
 		nextBtn.setAttribute('role', 'button');
 		nextBtn.setAttribute('custom-hover', 'true');
 		nextBtn.setAttribute('aria-disabled', 'false');
-		nextBtn.setAttribute('aria-label', 'Next');
+		nextBtn.setAttribute('aria-label', nls.localize('sidexSettingsNext', 'Next'));
 		nav.appendChild(nextBtn);
 		header.appendChild(nav);
 
@@ -349,7 +349,7 @@ export class SidexSettingsPanel extends Disposable {
 		const maxBtn = document.createElement('a');
 		maxBtn.className = 'action-label codicon codicon-screen-full';
 		maxBtn.setAttribute('role', 'button');
-		maxBtn.setAttribute('aria-label', 'Maximize Modal Editor');
+		maxBtn.setAttribute('aria-label', nls.localize('sidexSettingsMaximizeModalEditor', 'Maximize Modal Editor'));
 		maxBtn.setAttribute('aria-pressed', 'false');
 		maxBtn.tabIndex = -1;
 		maxBtn.addEventListener('click', () => {
@@ -358,11 +358,11 @@ export class SidexSettingsPanel extends Disposable {
 			if (this._isMaximized) {
 				maxBtn.classList.remove('codicon-screen-full');
 				maxBtn.classList.add('codicon-screen-normal');
-				maxBtn.setAttribute('aria-label', 'Restore Modal Editor');
+				maxBtn.setAttribute('aria-label', nls.localize('sidexSettingsRestoreModalEditor', 'Restore Modal Editor'));
 			} else {
 				maxBtn.classList.remove('codicon-screen-normal');
 				maxBtn.classList.add('codicon-screen-full');
-				maxBtn.setAttribute('aria-label', 'Maximize Modal Editor');
+				maxBtn.setAttribute('aria-label', nls.localize('sidexSettingsMaximizeModalEditor', 'Maximize Modal Editor'));
 			}
 			this._layoutResizable();
 		});
@@ -377,7 +377,7 @@ export class SidexSettingsPanel extends Disposable {
 		const closeBtn = document.createElement('a');
 		closeBtn.className = 'action-label codicon codicon-close';
 		closeBtn.setAttribute('role', 'button');
-		closeBtn.setAttribute('aria-label', 'Close Modal Editor (Escape)');
+		closeBtn.setAttribute('aria-label', nls.localize('sidexSettingsCloseModalEditor', 'Close Modal Editor (Escape)'));
 		closeBtn.tabIndex = -1;
 		closeBtn.addEventListener('click', () => this.close());
 		closeItem.appendChild(closeBtn);
@@ -415,8 +415,8 @@ export class SidexSettingsPanel extends Disposable {
 
 		const searchInput = document.createElement('input');
 		searchInput.type = 'text';
-		searchInput.placeholder = 'Search settings';
-		searchInput.setAttribute('aria-label', 'Search settings');
+		searchInput.placeholder = nls.localize('sidexSettingsSearch', 'Search settings');
+		searchInput.setAttribute('aria-label', nls.localize('sidexSettingsSearch', 'Search settings'));
 		searchInput.addEventListener('input', () => this._filterNav(searchInput.value));
 		searchWrapper.appendChild(searchInput);
 		searchContainer.appendChild(searchWrapper);
@@ -426,7 +426,10 @@ export class SidexSettingsPanel extends Disposable {
 		this._navContainer = document.createElement('div');
 		this._navContainer.className = 'sidex-settings-nav';
 		this._navContainer.setAttribute('role', 'navigation');
-		this._navContainer.setAttribute('aria-label', 'Settings Table of Contents');
+		this._navContainer.setAttribute(
+			'aria-label',
+			nls.localize('sidexSettingsTableOfContents', 'Settings Table of Contents')
+		);
 		this._buildNav();
 		sidebar.appendChild(this._navContainer);
 

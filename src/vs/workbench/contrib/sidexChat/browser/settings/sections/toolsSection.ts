@@ -5,6 +5,7 @@
 
 import type { SettingsSection } from '../sidexSettingsPanel.js';
 import { createCustomDropdown } from '../sidexSettingsStyles.js';
+import { localize } from '../../../../../../nls.js';
 
 type TauriInvoke = ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null;
 
@@ -21,7 +22,7 @@ export class ToolsSection implements SettingsSection {
 
 		const title = document.createElement('div');
 		title.className = 'sidex-settings-section-title';
-		title.textContent = 'Tools & MCPs';
+		title.textContent = localize('sidexSettingsTools', 'Tools & MCPs');
 		container.appendChild(title);
 
 		this._renderContext(container);
@@ -29,35 +30,46 @@ export class ToolsSection implements SettingsSection {
 	}
 
 	private _renderContext(container: HTMLElement): void {
-		const sectionTitle = this._sectionTitle('Context');
+		const sectionTitle = this._sectionTitle(localize('sidexSettingsContext', 'Context'));
 		container.appendChild(sectionTitle);
 
 		const card = document.createElement('div');
 		card.className = 'sidex-settings-card';
 
-		const webSearchRow = this._createRow(card, 'Web Search Tool', '');
+		const webSearchRow = this._createRow(card, localize('sidexSettingsWebSearchTool', 'Web Search Tool'), '');
 		this._addToggle(webSearchRow, true, 'tools.webSearch');
 
-		const autoWebRow = this._createRow(card, 'Auto-Accept Web Search', 'Enabled by Run Everything Auto-Run Mode');
+		const autoWebRow = this._createRow(
+			card,
+			localize('sidexSettingsAutoAcceptWebSearch', 'Auto-Accept Web Search'),
+			localize('sidexSettingsAutoAcceptWebSearchDescription', 'Enabled by Run Everything Auto-Run Mode')
+		);
 		this._addToggle(autoWebRow, true, 'tools.autoAcceptWebSearch');
 
-		const webFetchRow = this._createRow(card, 'Web Fetch Tool', '');
+		const webFetchRow = this._createRow(card, localize('sidexSettingsWebFetchTool', 'Web Fetch Tool'), '');
 		this._addToggle(webFetchRow, true, 'tools.webFetch');
 
 		container.appendChild(card);
 	}
 
 	private _renderAutoRun(container: HTMLElement): void {
-		const sectionTitle = this._sectionTitle('Auto-Run');
+		const sectionTitle = this._sectionTitle(localize('sidexSettingsAutoRun', 'Auto-Run'));
 		container.appendChild(sectionTitle);
 
 		const card = document.createElement('div');
 		card.className = 'sidex-settings-card';
 
-		const modeRow = this._createRow(card, 'Auto-Run Mode', '');
+		const modeRow = this._createRow(card, localize('sidexSettingsAutoRunMode', 'Auto-Run Mode'), '');
 		this._addSelect(
 			modeRow,
-			['Run Everything (Unsandboxed)', 'Ask for approval', 'Sandboxed'],
+			[
+				{
+					value: 'Run Everything (Unsandboxed)',
+					label: localize('sidexSettingsAutoRunEverything', 'Run Everything (Unsandboxed)')
+				},
+				{ value: 'Ask for approval', label: localize('sidexSettingsAutoRunAsk', 'Ask for approval') },
+				{ value: 'Sandboxed', label: localize('sidexSettingsAutoRunSandboxed', 'Sandboxed') }
+			],
 			'Run Everything (Unsandboxed)',
 			'tools.autoRunMode'
 		);
@@ -115,7 +127,12 @@ export class ToolsSection implements SettingsSection {
 		return toggle;
 	}
 
-	private _addSelect(row: HTMLElement, options: string[], defaultValue: string, settingKey: string): HTMLElement {
+	private _addSelect(
+		row: HTMLElement,
+		options: Array<string | { value: string; label: string }>,
+		defaultValue: string,
+		settingKey: string
+	): HTMLElement {
 		const dropdown = createCustomDropdown(options, defaultValue, newValue => {
 			if (this._invoke) {
 				this._invoke('settings_update', { key: settingKey, value: newValue, scope: 'user' }).catch(() => {});

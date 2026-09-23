@@ -4,6 +4,7 @@
 
 import { Component, DOM, $ } from '../base.js';
 import { Emitter, Event } from '../../../../../../base/common/event.js';
+import { localize } from '../../../../../../nls.js';
 
 export interface QuestionData {
 	toolCallId: string;
@@ -68,7 +69,7 @@ export class QuestionDialog extends Component {
 		if (data.allowMultiple) {
 			const footer = this.append('div', 'sc-question-footer');
 			this._submitBtn = DOM.append(footer, $('button.sc-question-submit'));
-			this._submitBtn.textContent = 'Confirm';
+			this._submitBtn.textContent = localize('sidex.chat.confirm', 'Confirm');
 			(this._submitBtn as HTMLButtonElement).disabled = true;
 			this.on(this._submitBtn, 'click', () => {
 				if (this._selected.size > 0) {

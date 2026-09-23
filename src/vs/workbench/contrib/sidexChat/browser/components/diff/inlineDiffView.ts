@@ -12,6 +12,7 @@ import { URI } from '../../../../../../base/common/uri.js';
 import { IModelService } from '../../../../../../editor/common/services/model.js';
 import { getIconClasses } from '../../../../../../editor/common/services/getIconClasses.js';
 import { FileKind } from '../../../../../../platform/files/common/files.js';
+import { localize } from '../../../../../../nls.js';
 
 export interface DiffCallbacks {
 	onAccept: (hunk: DiffHunk) => void;
@@ -114,12 +115,12 @@ export class InlineDiffView extends Component {
 
 		const rejectBtn = DOM.append(actionsDiv, $<HTMLButtonElement>('button.sc-diff-btn.sc-diff-btn-reject-all'));
 		rejectBtn.type = 'button';
-		rejectBtn.textContent = 'Reject';
+		rejectBtn.textContent = localize('sidex.chat.reject', 'Reject');
 		this.on(rejectBtn, 'click', () => this._rejectAll());
 
 		const acceptBtn = DOM.append(actionsDiv, $<HTMLButtonElement>('button.sc-diff-btn.sc-diff-btn-accept-all'));
 		acceptBtn.type = 'button';
-		acceptBtn.textContent = 'Accept';
+		acceptBtn.textContent = localize('sidex.chat.accept', 'Accept');
 		this.on(acceptBtn, 'click', () => this._acceptAll());
 	}
 
@@ -172,7 +173,7 @@ export class InlineDiffView extends Component {
 					DOM.$('button.ui-tool-call-card__expand-button.ui-tool-call-card__expand-button--collapsed')
 				);
 				expandBtn.setAttribute('type', 'button');
-				expandBtn.setAttribute('aria-label', 'Expand diff');
+				expandBtn.setAttribute('aria-label', localize('sidex.chat.expandDiff', 'Expand diff'));
 				expandBtn.setAttribute('aria-expanded', 'false');
 				const expandIcon = DOM.append(expandBtn, DOM.$('span.ui-tool-call-card__expand-icon'));
 				const iconI = DOM.append(expandIcon, DOM.$('span.codicon.codicon-chevron-down'));
@@ -184,7 +185,12 @@ export class InlineDiffView extends Component {
 					expandBtn.classList.toggle('ui-tool-call-card__expand-button--collapsed', !expanded);
 					expandBtn.classList.toggle('ui-tool-call-card__expand-button--expanded', expanded);
 					expandBtn.setAttribute('aria-expanded', String(expanded));
-					expandBtn.setAttribute('aria-label', expanded ? 'Collapse diff' : 'Expand diff');
+					expandBtn.setAttribute(
+						'aria-label',
+						expanded
+							? localize('sidex.chat.collapseDiff', 'Collapse diff')
+							: localize('sidex.chat.expandDiff', 'Expand diff')
+					);
 					iconI.classList.toggle('codicon-chevron-down', !expanded);
 					iconI.classList.toggle('codicon-chevron-up', expanded);
 

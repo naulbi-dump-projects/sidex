@@ -1299,7 +1299,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 		const searchInput = document.createElement('input');
 		searchInput.type = 'text';
 		searchInput.className = 'sidex-popup-search';
-		searchInput.placeholder = 'Filter branches, stashes, tags...';
+		searchInput.placeholder = localize('sidex.git.filter', 'Filter branches, stashes, tags...');
 		searchRow.appendChild(searchInput);
 		popup.appendChild(searchRow);
 
@@ -1362,7 +1362,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 		};
 
 		const renderContent = async () => {
-			contentArea.innerHTML = '<div class="sidex-popup-loading">Loading...</div>';
+			contentArea.innerHTML = `<div class="sidex-popup-loading">${localize('sidex.git.loading', 'Loading...')}</div>`;
 
 			try {
 				const repo = getRepo();
@@ -1529,7 +1529,9 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 				) => {
 					const row = document.createElement('div');
 					row.className = 'sidex-popup-item' + (branch.current ? ' sidex-popup-item-active' : '');
-					const selectedTag = branch.current ? '<span class="sidex-popup-selected-tag">selected</span>' : '';
+					const selectedTag = branch.current
+						? `<span class="sidex-popup-selected-tag">${localize('sidex.git.selected', 'selected')}</span>`
+						: '';
 					const desc = branch.description ? `<span class="sidex-popup-desc">${branch.description}</span>` : '';
 					row.innerHTML = `${selectedTag}<span class="codicon codicon-git-branch sidex-popup-icon"></span><span class="sidex-popup-label">${branch.name}</span>${desc}`;
 					(row as any)._searchText = (branch.name + ' ' + (branch.description || '')).toLowerCase();
@@ -1554,7 +1556,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 				if (localBranches.length > 0) {
 					const header = document.createElement('div');
 					header.className = 'sidex-popup-header';
-					header.textContent = `Local Branches`;
+					header.textContent = localize('sidex.git.localBranches', 'Local Branches');
 					contentArea.appendChild(header);
 
 					for (const branch of localBranches) {
@@ -1571,7 +1573,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 				if (remoteBranches.length > 0) {
 					const header = document.createElement('div');
 					header.className = 'sidex-popup-header';
-					header.textContent = `Remote Branches`;
+					header.textContent = localize('sidex.git.remoteBranches', 'Remote Branches');
 					contentArea.appendChild(header);
 
 					for (const branch of remoteBranches) {
@@ -1586,7 +1588,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 				if (tags.length > 0) {
 					const header = document.createElement('div');
 					header.className = 'sidex-popup-header';
-					header.textContent = 'Tags';
+					header.textContent = localize('sidex.git.tags', 'Tags');
 					contentArea.appendChild(header);
 
 					for (const tag of tags) {
@@ -1612,7 +1614,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 				if (stashes.length > 0) {
 					const header = document.createElement('div');
 					header.className = 'sidex-popup-header';
-					header.textContent = 'Stashes';
+					header.textContent = localize('sidex.git.stashes', 'Stashes');
 					contentArea.appendChild(header);
 
 					for (const stash of stashes) {
@@ -1654,7 +1656,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 					});
 				});
 			} catch (err) {
-				contentArea.innerHTML = `<div class="sidex-popup-empty">Error loading data</div>`;
+				contentArea.innerHTML = `<div class="sidex-popup-empty">${localize('sidex.git.errorLoading', 'Error loading data')}</div>`;
 				console.error('[sidex] git popup error:', err);
 			}
 		};
@@ -1670,17 +1672,33 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 		};
 
 		const actions = [
-			{ icon: 'codicon-add', label: 'New Branch...', action: () => execCmd('git.branch') },
-			{ icon: 'codicon-git-branch', label: 'Rename Branch...', action: () => execCmd('git.renameBranch') },
-			{ icon: 'codicon-trash', label: 'Delete Branch...', action: () => execCmd('git.deleteBranch') },
+			{
+				icon: 'codicon-add',
+				label: localize('sidex.git.newBranch', 'New Branch...'),
+				action: () => execCmd('git.branch')
+			},
+			{
+				icon: 'codicon-git-branch',
+				label: localize('sidex.git.renameBranch', 'Rename Branch...'),
+				action: () => execCmd('git.renameBranch')
+			},
+			{
+				icon: 'codicon-trash',
+				label: localize('sidex.git.deleteBranch', 'Delete Branch...'),
+				action: () => execCmd('git.deleteBranch')
+			},
 			{ separator: true },
-			{ icon: 'codicon-cloud-download', label: 'Fetch All Remotes', action: () => execCmd('git.fetchAll') },
-			{ icon: 'codicon-arrow-down', label: 'Pull', action: () => execCmd('git.pull') },
-			{ icon: 'codicon-arrow-up', label: 'Push', action: () => execCmd('git.push') },
+			{
+				icon: 'codicon-cloud-download',
+				label: localize('sidex.git.fetchAll', 'Fetch All Remotes'),
+				action: () => execCmd('git.fetchAll')
+			},
+			{ icon: 'codicon-arrow-down', label: localize('sidex.git.pull', 'Pull'), action: () => execCmd('git.pull') },
+			{ icon: 'codicon-arrow-up', label: localize('sidex.git.push', 'Push'), action: () => execCmd('git.push') },
 			{ separator: true },
 			{
 				icon: 'codicon-git-commit',
-				label: 'Commit...',
+				label: localize('sidex.git.commit', 'Commit...'),
 				action: () => {
 					cleanup();
 					setTimeout(() => {
@@ -1690,12 +1708,32 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 					}, 50);
 				}
 			},
-			{ icon: 'codicon-merge', label: 'Merge Branch...', action: () => execCmd('git.merge') },
-			{ icon: 'codicon-git-pull-request', label: 'Rebase...', action: () => execCmd('git.rebase') },
+			{
+				icon: 'codicon-merge',
+				label: localize('sidex.git.mergeBranch', 'Merge Branch...'),
+				action: () => execCmd('git.merge')
+			},
+			{
+				icon: 'codicon-git-pull-request',
+				label: localize('sidex.git.rebase', 'Rebase...'),
+				action: () => execCmd('git.rebase')
+			},
 			{ separator: true },
-			{ icon: 'codicon-archive', label: 'Stash Changes...', action: () => execCmd('git.stash') },
-			{ icon: 'codicon-archive', label: 'Pop Stash...', action: () => execCmd('git.stashPop') },
-			{ icon: 'codicon-archive', label: 'Apply Stash...', action: () => execCmd('git.stashApply') }
+			{
+				icon: 'codicon-archive',
+				label: localize('sidex.git.stashChanges', 'Stash Changes...'),
+				action: () => execCmd('git.stash')
+			},
+			{
+				icon: 'codicon-archive',
+				label: localize('sidex.git.popStash', 'Pop Stash...'),
+				action: () => execCmd('git.stashPop')
+			},
+			{
+				icon: 'codicon-archive',
+				label: localize('sidex.git.applyStash', 'Apply Stash...'),
+				action: () => execCmd('git.stashApply')
+			}
 		];
 
 		const sep = document.createElement('div');

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SettingsSection } from '../sidexSettingsPanel.js';
+import { localize } from '../../../../../../nls.js';
 
 type TauriInvoke = ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null;
 
@@ -61,12 +62,15 @@ export class RulesSection implements SettingsSection {
 
 		const title = document.createElement('div');
 		title.className = 'sidex-settings-section-title';
-		title.textContent = 'Rules, Skills & Hooks';
+		title.textContent = localize('sidexSettingsRulesSkillsHooks', 'Rules, Skills & Hooks');
 		container.appendChild(title);
 
 		const desc = document.createElement('div');
 		desc.className = 'sidex-settings-row-description sidex-settings-section-desc';
-		desc.textContent = 'Provide domain-specific knowledge and workflows for the agent';
+		desc.textContent = localize(
+			'sidexSettingsRulesSkillsHooksDescription',
+			'Provide domain-specific knowledge and workflows for the agent'
+		);
 		container.appendChild(desc);
 
 		// 1. Render Scope & Integration Card (Static)
@@ -95,22 +99,28 @@ export class RulesSection implements SettingsSection {
 		// Render Rules Card
 		const filteredRules = this._filterItems(this._rules);
 		this._renderSubsectionCard(this._dynamicCardsWrapper, {
-			title: 'Rules',
-			description: 'Guide agent behavior (coding standards, practices, conventions)',
+			title: localize('sidexSettingsRules', 'Rules'),
+			description: localize(
+				'sidexSettingsRulesDescription',
+				'Guide agent behavior (coding standards, practices, conventions)'
+			),
 			items: filteredRules,
-			emptyText: 'No Rules Yet',
-			newButtonText: 'New Rule',
+			emptyText: localize('sidexSettingsNoRulesYet', 'No Rules Yet'),
+			newButtonText: localize('sidexSettingsNewRule', 'New Rule'),
 			newAction: () => this._createNewRule()
 		});
 
 		// Render Skills Card
 		const filteredSkills = this._filterItems(this._skills);
 		this._renderSubsectionCard(this._dynamicCardsWrapper, {
-			title: 'Skills',
-			description: 'Specialized capabilities that help the agent accomplish specific tasks',
+			title: localize('sidexSettingsSkills', 'Skills'),
+			description: localize(
+				'sidexSettingsSkillsDescription',
+				'Specialized capabilities that help the agent accomplish specific tasks'
+			),
 			items: filteredSkills,
-			emptyText: 'No Skills Yet',
-			newButtonText: 'New Skill',
+			emptyText: localize('sidexSettingsNoSkillsYet', 'No Skills Yet'),
+			newButtonText: localize('sidexSettingsNewSkill', 'New Skill'),
 			newAction: () => this._createNewSkill()
 		});
 
@@ -199,14 +209,18 @@ export class RulesSection implements SettingsSection {
 		card.className = 'sidex-settings-card';
 
 		// Row 1: Rules Scope Segmented Selector
-		const scopeRow = this._createRow(card, 'Rules scope', 'Filter rules and skills by user or project scope');
+		const scopeRow = this._createRow(
+			card,
+			localize('sidexSettingsRulesScope', 'Rules scope'),
+			localize('sidexSettingsRulesScopeDescription', 'Filter rules and skills by user or project scope')
+		);
 		this._addScopeSegmentedControl(scopeRow);
 
 		// Row 2: Include third-party integrations
 		const integrateRow = this._createRow(
 			card,
-			'Include third-party Plugins, Skills, and other configs',
-			'Auto import from other tools'
+			localize('sidexSettingsThirdPartyIntegrations', 'Include third-party Plugins, Skills, and other configs'),
+			localize('sidexSettingsThirdPartyIntegrationsDescription', 'Auto import from other tools')
 		);
 		this._addToggle(integrateRow, true, 'sidex.rules.includeThirdParty');
 
@@ -218,9 +232,9 @@ export class RulesSection implements SettingsSection {
 		control.className = 'sidex-settings-segmented-control';
 
 		const tabs: { id: TabFilter; label: string }[] = [
-			{ id: 'all', label: 'All' },
-			{ id: 'user', label: 'User' },
-			{ id: 'project', label: 'Project' }
+			{ id: 'all', label: localize('sidexSettingsAll', 'All') },
+			{ id: 'user', label: localize('sidexSettingsUser', 'User') },
+			{ id: 'project', label: localize('sidexSettingsProject', 'Project') }
 		];
 
 		for (const tab of tabs) {
@@ -287,7 +301,7 @@ export class RulesSection implements SettingsSection {
 				const action = row.querySelector('.sidex-settings-row-action')!;
 				const editBtn = document.createElement('button');
 				editBtn.className = 'sidex-settings-btn';
-				editBtn.textContent = 'Edit';
+				editBtn.textContent = localize('sidexSettingsEdit', 'Edit');
 				editBtn.addEventListener('click', () => {
 					window.dispatchEvent(new CustomEvent('sidex-open-file', { detail: { path: item.id } }));
 				});
@@ -303,12 +317,19 @@ export class RulesSection implements SettingsSection {
 		card.className = 'sidex-settings-card';
 
 		// Create Header Row
-		this._createRow(card, 'Hooks', 'Lifecycle hooks that trigger on agent events');
+		this._createRow(
+			card,
+			localize('sidexSettingsHooks', 'Hooks'),
+			localize('sidexSettingsHooksDescription', 'Lifecycle hooks that trigger on agent events')
+		);
 
 		if (this._hooks.length === 0) {
 			const empty = document.createElement('div');
 			empty.className = 'sidex-settings-empty-state';
-			empty.textContent = 'No hooks configured. Manage hooks in the Hooks settings section.';
+			empty.textContent = localize(
+				'sidexSettingsNoHooksConfigured',
+				'No hooks configured. Manage hooks in the Hooks settings section.'
+			);
 			card.appendChild(empty);
 		} else {
 			for (const hook of this._hooks) {
@@ -316,7 +337,9 @@ export class RulesSection implements SettingsSection {
 				const action = row.querySelector('.sidex-settings-row-action')!;
 				const statusEl = document.createElement('span');
 				statusEl.style.cssText = 'font-size:11px;color:var(--vscode-descriptionForeground);font-weight:500;';
-				statusEl.textContent = hook.enabled ? 'Enabled' : 'Disabled';
+				statusEl.textContent = hook.enabled
+					? localize('sidexSettingsEnabled', 'Enabled')
+					: localize('sidexSettingsDisabled', 'Disabled');
 				action.appendChild(statusEl);
 			}
 		}

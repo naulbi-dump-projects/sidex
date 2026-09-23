@@ -5,6 +5,7 @@
 import { Component, DOM, $ } from '../components/base.js';
 import { IAccountService, IAuthSession } from './accountService.js';
 import { Emitter, Event } from '../../../../../base/common/event.js';
+import { localize } from '../../../../../nls.js';
 
 /** Mirrors the Rust `ProviderStatus` struct returned by the `providers_status` command. */
 interface IProviderStatus {
@@ -95,7 +96,7 @@ export class AccountPanel extends Component {
 		// Action button
 		const actions = DOM.append(container, $('div.sc-account-actions'));
 		const configureBtn = DOM.append(actions, $('button.sc-account-btn.sc-account-btn-secondary'));
-		configureBtn.textContent = 'Configure Providers';
+		configureBtn.textContent = localize('sidex.chat.configureProviders', 'Configure Providers');
 		this.on(configureBtn, 'click', () => this._onDidRequestManagePlan.fire());
 	}
 
@@ -121,11 +122,17 @@ export class AccountPanel extends Component {
 		const heading = DOM.append(section, $('div.sc-account-providers-heading'));
 		// Don't call it "Connected providers" when there aren't any — that
 		// reads like a broken state instead of a starting one.
-		heading.textContent = connected.length > 0 ? 'Connected providers' : 'Providers';
+		heading.textContent =
+			connected.length > 0
+				? localize('sidex.chat.connectedProviders', 'Connected providers')
+				: localize('sidex.chat.providers', 'Providers');
 
 		if (connected.length === 0) {
 			const empty = DOM.append(section, $('div.sc-account-providers-empty'));
-			empty.textContent = 'No providers connected yet. Add an API key below to start chatting.';
+			empty.textContent = localize(
+				'sidex.chat.noProviders',
+				'No providers connected yet. Add an API key below to start chatting.'
+			);
 			return;
 		}
 
@@ -144,13 +151,13 @@ export class AccountPanel extends Component {
 	private static _sourceLabel(source: string | null): string {
 		switch (source) {
 			case 'settings':
-				return 'API key';
+				return localize('sidex.chat.apiKey', 'API key');
 			case 'env':
-				return 'Environment';
+				return localize('sidex.chat.environment', 'Environment');
 			case 'cli':
-				return 'CLI login';
+				return localize('sidex.chat.cliLogin', 'CLI login');
 			case 'local':
-				return 'Local server';
+				return localize('sidex.chat.localServer', 'Local server');
 			default:
 				return '';
 		}

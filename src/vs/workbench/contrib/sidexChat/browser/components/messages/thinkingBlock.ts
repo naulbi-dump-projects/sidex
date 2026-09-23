@@ -1,4 +1,5 @@
 import { Component, $, DOM, escapeHtml } from '../base.js';
+import { localize } from '../../../../../../nls.js';
 
 export class ThinkingBlock extends Component {
 	private readonly _headerEl: HTMLElement;
@@ -25,12 +26,12 @@ export class ThinkingBlock extends Component {
 			'cursor: pointer; opacity: 1; display: flex; align-items: center; gap: 6px; padding: 4px 0; margin-bottom: 6px;';
 		const action = DOM.append(this._headerEl, $('span.ui-collapsible-action'));
 		action.style.cssText = 'font-weight: 400; color: var(--vscode-descriptionForeground); flex-shrink: 0;';
-		action.textContent = 'Thought';
+		action.textContent = localize('sidex.chat.thought', 'Thought');
 
 		this._elapsedEl = DOM.append(this._headerEl, $('span.ui-collapsible-details'));
 		this._elapsedEl.style.cssText =
 			'color: var(--vscode-descriptionForeground); opacity: 0.6; overflow: hidden; text-overflow: ellipsis;';
-		this._elapsedEl.textContent = 'for 0s';
+		this._elapsedEl.textContent = localize('sidex.chat.elapsedSeconds', '{0}s', 0);
 
 		this._chevronEl = document.createElement('i');
 		this._chevronEl.className = 'cursor-icon ui-icon ui-collapsible-chevron';
@@ -90,11 +91,14 @@ export class ThinkingBlock extends Component {
 	private _updateElapsed(): void {
 		const elapsed = Math.round((Date.now() - this._startTime) / 1000);
 		if (elapsed < 60) {
-			this._elapsedEl.textContent = `for ${elapsed}s`;
+			this._elapsedEl.textContent = localize('sidex.chat.elapsedSeconds', '{0}s', elapsed);
 		} else {
 			const m = Math.floor(elapsed / 60);
 			const s = elapsed % 60;
-			this._elapsedEl.textContent = s > 0 ? `for ${m}m ${s}s` : `for ${m}m`;
+			this._elapsedEl.textContent =
+				s > 0
+					? localize('sidex.chat.elapsedMinutes', '{0}m {1}s', m, s)
+					: localize('sidex.chat.elapsedMinutesOnly', '{0}m', m);
 		}
 	}
 

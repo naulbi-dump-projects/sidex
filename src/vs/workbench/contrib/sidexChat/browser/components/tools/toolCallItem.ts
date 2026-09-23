@@ -4,6 +4,7 @@ import { InlineDiffView, DiffCallbacks } from '../diff/inlineDiffView.js';
 import { DiffHunk } from '../diff/diffAlgorithm.js';
 import { ILanguageService } from '../../../../../../editor/common/languages/language.js';
 import { IModelService } from '../../../../../../editor/common/services/model.js';
+import { localize } from '../../../../../../nls.js';
 
 const EDIT_TOOLS = new Set([
 	'edit_file',
@@ -16,32 +17,32 @@ const EDIT_TOOLS = new Set([
 ]);
 
 const TOOL_DESCRIPTIONS: Record<string, (args: Record<string, unknown>) => string> = {
-	read_file: a => `Read ${fileName(a['path'])}`,
-	write_file: a => `Wrote ${fileName(a['path'])}`,
-	edit_file: a => `Edited ${fileName(a['path'])}`,
-	multi_edit: a => `Edited ${fileName(a['path'])}`,
-	create_file: a => `Created ${fileName(a['path'])}`,
-	str_replace_editor: a => `Edited ${fileName(a['path'])}`,
-	delete_file: a => `Deleted ${fileName(a['path'])}`,
-	shell: a => `Ran \`${shortCmd(a['command'])}\``,
-	grep: a => `Searched for "${a['pattern'] || ''}"`,
-	glob: a => `Found files matching "${a['pattern'] || a['glob'] || ''}"`,
-	search_files: a => `Searched files for "${a['pattern'] || ''}"`,
-	git_status: () => 'Checked git status',
-	git_log: () => 'Viewed git log',
-	git_diff_file: a => `Diffed ${fileName(a['path'])}`,
-	git_commit: a => `Committed: ${a['message'] || ''}`,
-	list_dir: a => `Listed ${a['path'] || '.'}`,
-	tree: a => `Listed tree of ${a['path'] || '.'}`,
-	batch_read: () => 'Read multiple files',
-	lsp_hover: a => `Inspected symbol in ${fileName(a['path'])}`,
-	lsp_definition: a => `Found definition in ${fileName(a['path'])}`,
-	lsp_references: a => `Found references in ${fileName(a['path'])}`
+	read_file: a => localize('sidex.chat.toolRead', 'Read {0}', fileName(a['path'])),
+	write_file: a => localize('sidex.chat.toolWrote', 'Wrote {0}', fileName(a['path'])),
+	edit_file: a => localize('sidex.chat.toolEdited', 'Edited {0}', fileName(a['path'])),
+	multi_edit: a => localize('sidex.chat.toolEdited', 'Edited {0}', fileName(a['path'])),
+	create_file: a => localize('sidex.chat.toolCreated', 'Created {0}', fileName(a['path'])),
+	str_replace_editor: a => localize('sidex.chat.toolEdited', 'Edited {0}', fileName(a['path'])),
+	delete_file: a => localize('sidex.chat.toolDeleted', 'Deleted {0}', fileName(a['path'])),
+	shell: a => localize('sidex.chat.toolRan', 'Ran {0}', `\`${shortCmd(a['command'])}\``),
+	grep: a => localize('sidex.chat.toolSearchedFor', 'Searched for "{0}"', a['pattern'] || ''),
+	glob: a => localize('sidex.chat.toolFoundMatching', 'Found files matching "{0}"', a['pattern'] || a['glob'] || ''),
+	search_files: a => localize('sidex.chat.toolSearchedFor', 'Searched files for "{0}"', a['pattern'] || ''),
+	git_status: () => localize('sidex.chat.toolGitStatus', 'Checked git status'),
+	git_log: () => localize('sidex.chat.toolGitLog', 'Viewed git log'),
+	git_diff_file: a => localize('sidex.chat.toolDiffed', 'Diffed {0}', fileName(a['path'])),
+	git_commit: a => localize('sidex.chat.toolCommitted', 'Committed: {0}', a['message'] || ''),
+	list_dir: a => localize('sidex.chat.toolListed', 'Listed {0}', a['path'] || '.'),
+	tree: a => localize('sidex.chat.toolListed', 'Listed tree of {0}', a['path'] || '.'),
+	batch_read: () => localize('sidex.chat.toolReadMultiple', 'Read multiple files'),
+	lsp_hover: a => localize('sidex.chat.toolInspectedSymbol', 'Inspected symbol in {0}', fileName(a['path'])),
+	lsp_definition: a => localize('sidex.chat.toolFoundDefinition', 'Found definition in {0}', fileName(a['path'])),
+	lsp_references: a => localize('sidex.chat.toolFoundReferences', 'Found references in {0}', fileName(a['path']))
 };
 
 function fileName(path: unknown): string {
 	if (typeof path !== 'string' || !path) {
-		return 'file';
+		return localize('sidex.chat.toolFile', 'file');
 	}
 	const segments = path.split('/');
 	return segments.pop() || path;
@@ -214,7 +215,12 @@ export class ToolCallItem extends Component {
 		if (!editInfo.oldContent) {
 			// Original content unknown (file existed but was never read in
 			// this transcript). A destructive guess is worse than no revert.
-			this._showRevertError('Cannot revert: the original file content is not known in this session');
+			this._showRevertError(
+				localize(
+					'sidex.chat.toolRevertMissingContent',
+					'Cannot revert: the original file content is not known in this session'
+				)
+			);
 			return;
 		}
 		// Swap newContent back to oldContent in the file. Safe whether
@@ -237,7 +243,9 @@ export class ToolCallItem extends Component {
 		};
 		const invoke = g.__TAURI_INVOKE__ ?? g.__TAURI_INTERNALS__?.invoke;
 		if (!invoke) {
-			this._showRevertError('Revert unavailable: local tool bridge not found');
+			this._showRevertError(
+				localize('sidex.chat.toolRevertUnavailable', 'Revert unavailable: local tool bridge not found')
+			);
 			return;
 		}
 		// Resolve cwd from the file path itself: tool paths are resolved
@@ -255,11 +263,13 @@ export class ToolCallItem extends Component {
 			.then(resp => {
 				const r = resp as { error?: string } | null;
 				if (r && r.error) {
-					this._showRevertError(`Revert failed: ${r.error}`);
+					this._showRevertError(localize('sidex.chat.toolRevertFailed', 'Revert failed: {0}', r.error));
 				}
 			})
 			.catch(e => {
-				this._showRevertError(`Revert failed: ${e instanceof Error ? e.message : String(e)}`);
+				this._showRevertError(
+					localize('sidex.chat.toolRevertFailed', 'Revert failed: {0}', e instanceof Error ? e.message : String(e))
+				);
 			});
 	}
 
@@ -272,7 +282,11 @@ export class ToolCallItem extends Component {
 		const err = document.createElement('div');
 		err.className = 'sc-tool-revert-error';
 		err.style.cssText = 'color:var(--vscode-errorForeground);font-size:11px;padding:4px 8px;';
-		err.textContent = `${message} — the file on disk was NOT restored. Re-read it to verify its state.`;
+		err.textContent = localize(
+			'sidex.chat.toolRevertNotice',
+			'{0} — the file on disk was NOT restored. Re-read it to verify its state.',
+			message
+		);
 		this.element.appendChild(err);
 	}
 }
