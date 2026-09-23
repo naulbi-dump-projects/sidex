@@ -23,13 +23,14 @@ const APP_NAME: &str = "SideX";
 pub fn app_data_dir() -> PathBuf {
     #[cfg(target_os = "linux")]
     {
-        let base = std::env::var("XDG_CONFIG_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| {
+        let base = std::env::var("XDG_CONFIG_HOME").map_or_else(
+            |_| {
                 dirs::home_dir()
                     .unwrap_or_else(|| PathBuf::from("."))
                     .join(".config")
-            });
+            },
+            PathBuf::from,
+        );
         base.join(APP_NAME)
     }
 
@@ -62,17 +63,19 @@ pub fn app_data_dir() -> PathBuf {
 /// On Linux this was `~/.local/share/com.siden.sidex`.
 /// On macOS this was `~/Library/Application Support/com.siden.sidex`.
 /// On Windows this was `%LOCALAPPDATA%/com.siden.sidex`.
+#[allow(clippy::unnecessary_wraps)]
 fn legacy_app_data_dir() -> Option<PathBuf> {
     #[cfg(target_os = "linux")]
     {
-        let base = std::env::var("XDG_DATA_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| {
+        let base = std::env::var("XDG_DATA_HOME").map_or_else(
+            |_| {
                 dirs::home_dir()
                     .unwrap_or_else(|| PathBuf::from("."))
                     .join(".local")
                     .join("share")
-            });
+            },
+            PathBuf::from,
+        );
         Some(base.join("com.siden.sidex"))
     }
 
