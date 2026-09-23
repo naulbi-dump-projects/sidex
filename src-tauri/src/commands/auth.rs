@@ -65,7 +65,7 @@ fn computer_display_name() -> String {
     }
     #[cfg(unix)]
     if let Some(name) = env_nonempty("HOSTNAME") {
-        return strip_local_suffix(name);
+        return strip_local_suffix(&name);
     }
     hostname::get()
         .ok()
