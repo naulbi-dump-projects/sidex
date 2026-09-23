@@ -97,7 +97,19 @@ async function boot() {
 
 	const options: any = {
 		initialColorTheme: {
-			themeType: 'dark'
+			themeType: 'dark',
+			// Match the bundled Atom One Dark theme while the full theme service loads.
+			colors: {
+				'editor.background': '#282C34',
+				'editor.foreground': '#ABB2BF',
+				'sideBar.background': '#21252B',
+				'activityBar.background': '#333842',
+				'statusBar.background': '#21252B',
+				'titleBar.activeBackground': '#21252B',
+				'editorGroupHeader.tabsBackground': '#21252B',
+				'tab.activeBackground': '#282C34',
+				'tab.inactiveBackground': '#21252B'
+			}
 		},
 
 		additionalTrustedDomains: ['https://github.com', 'https://*.github.com', 'https://*.githubusercontent.com'],
@@ -160,7 +172,7 @@ async function boot() {
 			'workbench.startupEditor': 'welcomePage',
 			'workbench.enableExperiments': false,
 			'workbench.iconTheme': 'vs-seti',
-			'workbench.colorTheme': 'Dark Modern',
+			'workbench.colorTheme': 'Atom One Dark',
 			'editor.experimentalGpuAcceleration': 'auto',
 			'workbench.productIconTheme': 'Default',
 			'workbench.editor.showTabs': 'multiple',

@@ -6,6 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const extensionsDir = resolve(__dirname, '..', 'extensions');
+const bundledThemesDir = resolve(__dirname, '..', 'public', 'extensions');
 const metaOutputPath = resolve(__dirname, '..', 'extensions-meta.json');
 const jsOutputPath = resolve(__dirname, '..', 'public', 'builtin-extensions.js');
 
@@ -26,48 +27,53 @@ function writeBuiltinExtensions(descriptors) {
   console.log(`Wrote public/builtin-extensions.js (${(jsContent.length / 1024).toFixed(1)} KB)`);
 }
 
-if (!existsSync(extensionsDir)) {
-  console.warn(`Extensions directory not found: ${extensionsDir}`);
-  console.warn(`Continuing with built-in theme fallbacks. Run "npm run setup:full" to include the full VS Code extension catalog.`);
-  writeBuiltinExtensions([]);
-  process.exit(0);
-}
-
-const entries = readdirSync(extensionsDir);
 const descriptors = [];
+const seenIds = new Set();
 
-for (const dirName of entries) {
-  // Skip the Node.js Git extension — SideX uses its own Rust-native Git provider
-  if (dirName === 'git') continue;
+function addExtensions(directory) {
+  if (!existsSync(directory)) return;
+  for (const dirName of readdirSync(directory)) {
+    // Skip the Node.js Git extension — SideX uses its own Rust-native Git provider
+    if (dirName === 'git') continue;
 
-  const dirPath = join(extensionsDir, dirName);
-  if (!statSync(dirPath).isDirectory()) continue;
+    const dirPath = join(directory, dirName);
+    if (!statSync(dirPath).isDirectory()) continue;
 
-  const pkgPath = join(dirPath, 'package.json');
-  if (!existsSync(pkgPath)) continue;
+    const pkgPath = join(dirPath, 'package.json');
+    if (!existsSync(pkgPath)) continue;
 
-  let packageJSON;
-  try {
-    packageJSON = JSON.parse(readFileSync(pkgPath, 'utf-8'));
-  } catch (err) {
-    console.warn(`Skipping ${dirName}: failed to parse package.json — ${err.message}`);
-    continue;
-  }
-
-  let packageNLS = undefined;
-  const nlsPath = join(dirPath, 'package.nls.json');
-  if (existsSync(nlsPath)) {
+    let packageJSON;
     try {
-      packageNLS = JSON.parse(readFileSync(nlsPath, 'utf-8'));
-    } catch {
-      // nls is optional, ignore parse errors
+      packageJSON = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+    } catch (err) {
+      console.warn(`Skipping ${dirName}: failed to parse package.json — ${err.message}`);
+      continue;
     }
-  }
 
-  const descriptor = { extensionPath: dirName, packageJSON };
-  if (packageNLS) descriptor.packageNLS = packageNLS;
-  descriptors.push(descriptor);
+    let packageNLS = undefined;
+    const nlsPath = join(dirPath, 'package.nls.json');
+    if (existsSync(nlsPath)) {
+      try {
+        packageNLS = JSON.parse(readFileSync(nlsPath, 'utf-8'));
+      } catch {
+        // nls is optional, ignore parse errors
+      }
+    }
+
+    const id = `${packageJSON.publisher}.${packageJSON.name}`.toLowerCase();
+    if (seenIds.has(id)) continue;
+    seenIds.add(id);
+
+    const descriptor = { extensionPath: dirName, packageJSON };
+    if (packageNLS) descriptor.packageNLS = packageNLS;
+    descriptors.push(descriptor);
+  }
 }
+
+// Bundled themes are always available, even without the optional VS Code extensions catalog.
+// Prefer the pinned version over a second copy in extensions/.
+addExtensions(bundledThemesDir);
+addExtensions(extensionsDir);
 
 descriptors.sort((a, b) => a.extensionPath.localeCompare(b.extensionPath));
 

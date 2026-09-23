@@ -29,7 +29,7 @@ function getFileSizes(dir, extension) {
 
 // Copy extensions
 if (fs.existsSync('extensions')) {
-  fs.cpSync('extensions', path.join(DIST_DIR, 'extensions'), { recursive: true, force: true });
+  fs.cpSync('extensions', path.join(DIST_DIR, 'extensions'), { recursive: true, force: false });
 }
 if (fs.existsSync('extensions-meta.json')) {
   fs.copyFileSync('extensions-meta.json', path.join(DIST_DIR, 'extensions-meta.json'));

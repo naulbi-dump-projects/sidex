@@ -185,11 +185,11 @@ export class AccountPanel extends Component {
 	right: 8px;
 	z-index: 10000;
 	width: 280px;
-	background: rgba(30, 30, 30, 0.98);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: var(--vscode-menu-background, var(--vscode-editorWidget-background, #21252b));
+	color: var(--vscode-foreground, #abb2bf);
+	border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border, #3a3f4b));
 	border-radius: 8px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-	backdrop-filter: blur(12px);
+	box-shadow: 0 8px 32px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.4));
 	padding: 0;
 	overflow: hidden;
 }
@@ -206,13 +206,13 @@ export class AccountPanel extends Component {
 	width: 32px;
 	height: 32px;
 	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.07);
+	background: var(--vscode-list-hoverBackground, #2c313a);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	font-size: 13px;
 	font-weight: 600;
-	color: rgba(255, 255, 255, 0.8);
+	color: var(--vscode-foreground, #abb2bf);
 	overflow: hidden;
 	flex-shrink: 0;
 }
@@ -228,14 +228,14 @@ export class AccountPanel extends Component {
 .sc-account-name {
 	font-size: 12px;
 	font-weight: 500;
-	color: rgba(255, 255, 255, 0.9);
+	color: var(--vscode-foreground, #abb2bf);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 .sc-account-email {
 	font-size: 11px;
-	color: rgba(255, 255, 255, 0.45);
+	color: var(--vscode-descriptionForeground, #9da5b4);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -243,7 +243,7 @@ export class AccountPanel extends Component {
 .sc-account-providers {
 	margin-bottom: 14px;
 	padding: 12px;
-	background: rgba(255, 255, 255, 0.03);
+	background: var(--vscode-editor-background, #282c34);
 	border-radius: 6px;
 }
 .sc-account-providers-heading {
@@ -251,12 +251,12 @@ export class AccountPanel extends Component {
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
-	color: rgba(255, 255, 255, 0.4);
+	color: var(--vscode-descriptionForeground, #9da5b4);
 	margin-bottom: 8px;
 }
 .sc-account-providers-empty {
 	font-size: 11.5px;
-	color: rgba(255, 255, 255, 0.5);
+	color: var(--vscode-descriptionForeground, #9da5b4);
 }
 .sc-account-providers-list {
 	display: flex;
@@ -272,21 +272,21 @@ export class AccountPanel extends Component {
 	width: 6px;
 	height: 6px;
 	border-radius: 50%;
-	background: rgba(52, 211, 153, 0.9);
+	background: var(--vscode-testing-iconPassed, #98c379);
 	flex-shrink: 0;
 }
 .sc-account-provider-label {
 	flex: 1;
 	min-width: 0;
 	font-size: 11.5px;
-	color: rgba(255, 255, 255, 0.85);
+	color: var(--vscode-foreground, #abb2bf);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 .sc-account-provider-source {
 	font-size: 10.5px;
-	color: rgba(255, 255, 255, 0.4);
+	color: var(--vscode-descriptionForeground, #9da5b4);
 	flex-shrink: 0;
 }
 .sc-account-actions {
@@ -307,11 +307,11 @@ export class AccountPanel extends Component {
 	transition: background 0.15s ease;
 }
 .sc-account-btn-secondary {
-	background: rgba(255, 255, 255, 0.07);
-	color: rgba(255, 255, 255, 0.8);
+	background: var(--vscode-button-secondaryBackground, #353b45);
+	color: var(--vscode-button-secondaryForeground, #abb2bf);
 }
 .sc-account-btn-secondary:hover {
-	background: rgba(255, 255, 255, 0.12);
+	background: var(--vscode-button-secondaryHoverBackground, #3e4451);
 }
 `;
 		document.head.appendChild(style);

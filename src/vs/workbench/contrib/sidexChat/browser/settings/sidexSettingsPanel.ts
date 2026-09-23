@@ -127,14 +127,14 @@ export class SidexSettingsPanel extends Disposable {
 		const shadow = document.createElement('div');
 		shadow.className = 'modal-editor-shadow';
 		shadow.style.cssText =
-			'box-shadow:0 8px 32px rgba(0,0,0,0.5);border-radius:8px;overflow:hidden;width:100%;height:100%;';
+			'box-shadow:0 8px 32px var(--vscode-widget-shadow, rgba(0,0,0,0.4));border-radius:8px;overflow:hidden;width:100%;height:100%;';
 		resizable.appendChild(shadow);
 
 		// .modal-editor-part.has-sidebar — the grid container
 		const part = document.createElement('div');
 		part.className = 'part editor modal-editor-part has-sidebar';
 		part.style.cssText =
-			'display:grid;grid-template-rows:auto 1fr;grid-template-columns:auto 1fr;width:100%;height:100%;background-color:var(--vscode-sideBar-background, #141414);border:1px solid var(--vscode-editorWidget-border, rgba(255,255,255,0.09));border-radius:8px;overflow:hidden;position:relative;';
+			'display:grid;grid-template-rows:auto 1fr;grid-template-columns:auto 1fr;width:100%;height:100%;background-color:var(--vscode-sideBar-background, #21252b);border:1px solid var(--vscode-editorWidget-border, #3a3f4b);border-radius:8px;overflow:hidden;position:relative;';
 		part.setAttribute('role', 'dialog');
 		part.setAttribute('aria-modal', 'true');
 		part.setAttribute('aria-labelledby', 'sidex-modal-editor-title');
@@ -150,7 +150,7 @@ export class SidexSettingsPanel extends Disposable {
 		const contentWrapper = document.createElement('div');
 		contentWrapper.className = 'content';
 		contentWrapper.style.cssText =
-			'grid-column:2;grid-row:2;overflow:hidden;min-width:0;min-height:0;position:relative;background-color:var(--vscode-sideBar-background, #141414);';
+			'grid-column:2;grid-row:2;overflow:hidden;min-width:0;min-height:0;position:relative;background-color:var(--vscode-editor-background, #282c34);';
 		part.appendChild(contentWrapper);
 
 		this._content = document.createElement('div');
@@ -395,7 +395,7 @@ export class SidexSettingsPanel extends Disposable {
 		const sidebar = document.createElement('div');
 		sidebar.className = 'modal-editor-sidebar';
 		sidebar.style.cssText =
-			'grid-row:2;grid-column:1;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:8px;background-color:var(--vscode-sideBar-background, #181818);border-right:1px solid var(--vscode-sideBarSectionHeader-border, rgba(255,255,255,0.09));width:240px;';
+			'grid-row:2;grid-column:1;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:8px;background-color:var(--vscode-sideBar-background, #21252b);border-right:1px solid var(--vscode-sideBarSectionHeader-border, #3a3f4b);width:240px;';
 
 		// Account (First now!)
 		this._accountContainer = document.createElement('div');

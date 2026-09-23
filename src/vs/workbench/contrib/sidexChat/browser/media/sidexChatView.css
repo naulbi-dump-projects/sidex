@@ -2210,7 +2210,7 @@
 	--cursor-text-secondary: color-mix(in srgb, var(--vscode-foreground) 74%, transparent);
 	--cursor-text-tertiary: color-mix(in srgb, var(--vscode-foreground) 54%, transparent);
 	
-	--cursor-stroke-secondary: rgba(255, 255, 255, 0.06);
+	--cursor-stroke-secondary: var(--vscode-widget-border, color-mix(in srgb, var(--vscode-foreground) 9%, transparent));
 	--cursor-radius-xl: 12px;
 	--sidex-diff-card-background: var(--vscode-editor-background);
 	--sidex-diff-card-border-color: color-mix(in srgb, var(--vscode-foreground) 9%, transparent);

@@ -1,0 +1,15 @@
+{
+  "name": "vscode-theme-onedark",
+  "displayName": "Atom One Dark Theme",
+  "description": "One Dark Theme based on Atom",
+  "version": "2.3.0",
+  "publisher": "akamud",
+  "license": "MIT",
+  "engines": { "vscode": "^1.12.0" },
+  "categories": ["Themes"],
+  "contributes": {
+    "themes": [
+      { "label": "Atom One Dark", "uiTheme": "vs-dark", "path": "./themes/OneDark.json" }
+    ]
+  }
+}
