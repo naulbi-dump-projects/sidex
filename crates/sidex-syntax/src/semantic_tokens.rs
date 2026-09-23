@@ -169,7 +169,7 @@ pub fn decode_semantic_tokens(data: &[u32]) -> Vec<SemanticToken> {
     let mut line = 0u32;
     let mut start = 0u32;
 
-    for chunk in data.chunks_exact(5) {
+    for chunk in data.as_chunks::<5>().0 {
         let delta_line = chunk[0];
         let delta_start = chunk[1];
         let length = chunk[2];
@@ -721,11 +721,14 @@ mod tests {
     fn merge_highlights_semantic_override() {
         let syntax = vec![HighlightToken::new(0, 10, TokenScope::Variable)];
         let legend = standard_semantic_token_legend();
-        let func_idx = legend
-            .token_types
-            .iter()
-            .position(|t| t == "function")
-            .unwrap() as u32;
+        let func_idx = u32::try_from(
+            legend
+                .token_types
+                .iter()
+                .position(|t| t == "function")
+                .unwrap(),
+        )
+        .unwrap();
         let semantic = vec![SemanticToken {
             line: 0,
             start: 0,
