@@ -105,7 +105,8 @@ const sidexTranslations: Record<string, Translations> = {
 		sidexSettingsIndexing: 'Индексирование и статистика',
 		sidexSettingsPrivacy: 'Конфиденциальность',
 		sidexBuiltInAgent: 'Включить встроенный агент SideX',
-		sidexBuiltInAgentDescription: 'Запускать локальный сервер агента SideX. Это не влияет на внешние и системные агенты.',
+		sidexBuiltInAgentDescription:
+			'Запускать локальный сервер агента SideX. Это не влияет на внешние и системные агенты.',
 		sidexDefaultModel: 'Модель ИИ по умолчанию',
 		sidexDefaultAgentMode: 'Режим агента по умолчанию',
 		sidexAutoScroll: 'Автопрокрутка сообщений',
@@ -160,7 +161,9 @@ export async function loadNlsMessages(): Promise<void> {
 			if (contentType.includes('json')) {
 				const nlsEntries: NlsEntry[] = await indexRes.json();
 				if (nlsEntries.length > 0) {
-					(globalThis as any)._VSCODE_NLS_MESSAGES = nlsEntries.map(entry => translations[scopedTranslationKey(entry.module, entry.key)] ?? sidexExtra?.[entry.key] ?? entry.msg);
+					(globalThis as any)._VSCODE_NLS_MESSAGES = nlsEntries.map(
+						entry => translations[scopedTranslationKey(entry.module, entry.key)] ?? sidexExtra?.[entry.key] ?? entry.msg
+					);
 					(globalThis as any)._VSCODE_NLS_LANGUAGE = locale;
 					console.log(`[SideX NLS] Loaded ${nlsEntries.length} translations for ${locale} (indexed mode)`);
 					return;

@@ -39,12 +39,16 @@ export class GeneralSection implements SettingsSection {
 					this._invoke('settings_get', { section: 'sidex.general' }),
 					this._invoke('settings_get', { section: 'sidex.agent' })
 				]);
-				if (general) { this._settings = this._parseStoredSettings(general as SettingsData); }
+				if (general) {
+					this._settings = this._parseStoredSettings(general as SettingsData);
+				}
 				if (agent) {
 					const agentSettings = this._parseStoredSettings(agent as SettingsData);
 					this._agentEnabled = agentSettings.enabled !== false;
 				}
-			} catch { /* use defaults */ }
+			} catch {
+				/* use defaults */
+			}
 			await this._loadModelOptions();
 		}
 
@@ -56,7 +60,10 @@ export class GeneralSection implements SettingsSection {
 		this._addToggleRow(
 			card,
 			nls.localize('sidexBuiltInAgent', 'Enable built-in SideX agent'),
-			nls.localize('sidexBuiltInAgentDescription', 'Run SideX’s local agent server. This does not affect external or system agents.'),
+			nls.localize(
+				'sidexBuiltInAgentDescription',
+				'Run SideX’s local agent server. This does not affect external or system agents.'
+			),
 			'sidex.agent.enabled',
 			this._agentEnabled
 		);
@@ -68,7 +75,10 @@ export class GeneralSection implements SettingsSection {
 		this._addSelectRow(
 			card,
 			nls.localize('sidexDefaultAgentMode', 'Default Agent Mode'),
-			nls.localize('sidexDefaultAgentModeDescription', 'Set the default agent capability when starting a new workspace task.'),
+			nls.localize(
+				'sidexDefaultAgentModeDescription',
+				'Set the default agent capability when starting a new workspace task.'
+			),
 			[
 				{ value: 'agent', label: nls.localize('sidexAgentMode', 'Agent') },
 				{ value: 'plan', label: nls.localize('sidexPlanMode', 'Plan') },
@@ -82,7 +92,10 @@ export class GeneralSection implements SettingsSection {
 		this._addToggleRow(
 			card,
 			nls.localize('sidexAutoScroll', 'Auto scroll on message'),
-			nls.localize('sidexAutoScrollDescription', 'Automatically scroll the conversation viewport down when a new message is received.'),
+			nls.localize(
+				'sidexAutoScrollDescription',
+				'Automatically scroll the conversation viewport down when a new message is received.'
+			),
 			'sidex.general.autoScroll',
 			this._getSetting('autoScroll', true) as boolean
 		);
@@ -123,12 +136,14 @@ export class GeneralSection implements SettingsSection {
 			this._showToast('Coming soon — VS Code settings import is not yet available.');
 		});
 
-		const resetRow = this._createRow(card, 'Reset Don\'t Ask Again Dialogs', 'Show previously dismissed dialogs');
+		const resetRow = this._createRow(card, "Reset Don't Ask Again Dialogs", 'Show previously dismissed dialogs');
 		this._addButton(resetRow, 'Show', () => {
 			if (this._invoke) {
-				this._invoke('settings_update', { key: 'sidex.general.dismissedDialogs', value: {}, scope: 'user' }).then(() => {
-					this._showToast('All dialogs have been reset.');
-				}).catch(() => {});
+				this._invoke('settings_update', { key: 'sidex.general.dismissedDialogs', value: {}, scope: 'user' })
+					.then(() => {
+						this._showToast('All dialogs have been reset.');
+					})
+					.catch(() => {});
 			}
 		});
 	}
@@ -137,26 +152,64 @@ export class GeneralSection implements SettingsSection {
 		this._createSectionTitle(container, 'Layout');
 		const card = this._createCard(container);
 
-		this._addSelectRow(card, 'Window Layout', 'Choose default window arrangement',
-			['Editor', 'Agent'], this._getSetting('windowLayout', 'Editor') as string, 'sidex.general.windowLayout');
+		this._addSelectRow(
+			card,
+			'Window Layout',
+			'Choose default window arrangement',
+			['Editor', 'Agent'],
+			this._getSetting('windowLayout', 'Editor') as string,
+			'sidex.general.windowLayout'
+		);
 
-		this._addSelectRow(card, 'Conversation Density', 'Adjust chat message spacing',
-			['Compact', 'Comfortable', 'Spacious'], this._getSetting('conversationDensity', 'Comfortable') as string, 'sidex.general.conversationDensity');
+		this._addSelectRow(
+			card,
+			'Conversation Density',
+			'Adjust chat message spacing',
+			['Compact', 'Comfortable', 'Spacious'],
+			this._getSetting('conversationDensity', 'Comfortable') as string,
+			'sidex.general.conversationDensity'
+		);
 
-		this._addToggleRow(card, 'Title Bar', 'Show the window title bar',
-			'sidex.general.titleBar', this._getSetting('titleBar', true) as boolean);
+		this._addToggleRow(
+			card,
+			'Title Bar',
+			'Show the window title bar',
+			'sidex.general.titleBar',
+			this._getSetting('titleBar', true) as boolean
+		);
 
-		this._addToggleRow(card, 'Status Bar', 'Show the status bar at the bottom',
-			'sidex.general.statusBar', this._getSetting('statusBar', true) as boolean);
+		this._addToggleRow(
+			card,
+			'Status Bar',
+			'Show the status bar at the bottom',
+			'sidex.general.statusBar',
+			this._getSetting('statusBar', true) as boolean
+		);
 
-		this._addSelectRow(card, 'Review Control Location', 'Where to show review controls',
-			['Gutter', 'Toolbar', 'Both'], this._getSetting('reviewControlLocation', 'Gutter') as string, 'sidex.general.reviewControlLocation');
+		this._addSelectRow(
+			card,
+			'Review Control Location',
+			'Where to show review controls',
+			['Gutter', 'Toolbar', 'Both'],
+			this._getSetting('reviewControlLocation', 'Gutter') as string,
+			'sidex.general.reviewControlLocation'
+		);
 
-		this._addToggleRow(card, 'Auto-hide editor when empty', 'Collapse editor panel if no tabs are open',
-			'sidex.general.autoHideEditor', this._getSetting('autoHideEditor', false) as boolean);
+		this._addToggleRow(
+			card,
+			'Auto-hide editor when empty',
+			'Collapse editor panel if no tabs are open',
+			'sidex.general.autoHideEditor',
+			this._getSetting('autoHideEditor', false) as boolean
+		);
 
-		const tabsRow = this._addToggleRow(card, 'Open chat as editor tabs', '',
-			'sidex.general.chatAsTabs', this._getSetting('chatAsTabs', false) as boolean);
+		const tabsRow = this._addToggleRow(
+			card,
+			'Open chat as editor tabs',
+			'',
+			'sidex.general.chatAsTabs',
+			this._getSetting('chatAsTabs', false) as boolean
+		);
 		const badge = document.createElement('span');
 		badge.className = 'sidex-settings-new-badge';
 		badge.textContent = 'NEW';
@@ -167,26 +220,42 @@ export class GeneralSection implements SettingsSection {
 		this._createSectionTitle(container, 'Notifications');
 		const card = this._createCard(container);
 
-		this._addToggleRow(card, 'System Notifications', 'Show OS-level notifications',
-			'sidex.general.systemNotifications', this._getSetting('systemNotifications', true) as boolean);
+		this._addToggleRow(
+			card,
+			'System Notifications',
+			'Show OS-level notifications',
+			'sidex.general.systemNotifications',
+			this._getSetting('systemNotifications', true) as boolean
+		);
 
-		this._addToggleRow(card, 'Menu Bar Icon', 'Show icon in the system tray/menu bar',
-			'sidex.general.menuBarIcon', this._getSetting('menuBarIcon', true) as boolean);
+		this._addToggleRow(
+			card,
+			'Menu Bar Icon',
+			'Show icon in the system tray/menu bar',
+			'sidex.general.menuBarIcon',
+			this._getSetting('menuBarIcon', true) as boolean
+		);
 
-		this._addToggleRow(card, 'Completion Sound', 'Play a sound when operations complete',
-			'sidex.general.completionSound', this._getSetting('completionSound', false) as boolean);
+		this._addToggleRow(
+			card,
+			'Completion Sound',
+			'Play a sound when operations complete',
+			'sidex.general.completionSound',
+			this._getSetting('completionSound', false) as boolean
+		);
 	}
 
 	private _renderPrivacy(container: HTMLElement): void {
 		this._createSectionTitle(container, 'Privacy');
 		const card = this._createCard(container);
-		this._addToggleRow(card,
+		this._addToggleRow(
+			card,
 			'Data Sharing',
 			'Help improve SideX by sharing anonymous usage data. No code or personal information is ever collected.',
-			'sidex.general.dataSharing', this._getSetting('dataSharing', true) as boolean);
+			'sidex.general.dataSharing',
+			this._getSetting('dataSharing', true) as boolean
+		);
 	}
-
-
 
 	/**
 	 * There is no curated model catalog anymore (see ModelsSection) — a
@@ -195,27 +264,42 @@ export class GeneralSection implements SettingsSection {
 	 * rather than hardcoding a preset.
 	 */
 	private async _loadModelOptions(): Promise<void> {
-		if (!this._invoke) { return; }
+		if (!this._invoke) {
+			return;
+		}
 		try {
 			const raw = await this._invoke('settings_get', { section: 'sidex.models.custom' });
 			const arr = typeof raw === 'string' ? JSON.parse(raw) : raw;
-			if (!Array.isArray(arr)) { return; }
+			if (!Array.isArray(arr)) {
+				return;
+			}
 			this._modelOptions = arr
 				.map((entry: string | { id?: string; name?: string }) => {
 					const id = typeof entry === 'string' ? entry : entry?.id;
-					if (!id) { return null; }
+					if (!id) {
+						return null;
+					}
 					const name = typeof entry === 'object' ? entry?.name : undefined;
 					return { value: id, label: name ? `${name} (${id})` : id };
 				})
 				.filter((opt): opt is ModelOption => opt !== null);
-		} catch { /* no models configured yet */ }
+		} catch {
+			/* no models configured yet */
+		}
 	}
 
 	private _addDefaultModelRow(card: HTMLElement): void {
 		if (this._modelOptions.length === 0) {
 			// Nothing to default to until the user adds a model — a dropdown
 			// with no real entries would look broken rather than empty.
-			const row = this._createRow(card, nls.localize('sidexDefaultModel', 'Default AI Model'), nls.localize('sidexDefaultModelEmptyDescription', 'Add a model in the Models section to set a default for new conversations.'));
+			const row = this._createRow(
+				card,
+				nls.localize('sidexDefaultModel', 'Default AI Model'),
+				nls.localize(
+					'sidexDefaultModelEmptyDescription',
+					'Add a model in the Models section to set a default for new conversations.'
+				)
+			);
 			this._addButton(row, 'Configure Models', () => {
 				window.dispatchEvent(new CustomEvent('sidex-settings-navigate', { detail: 'models' }));
 			});
@@ -225,11 +309,17 @@ export class GeneralSection implements SettingsSection {
 		// A blank saved value means "no override" — represent that as its own
 		// option instead of silently defaulting the dropdown to whichever
 		// model happens to be first, which would look chosen without being saved.
-		const options: ModelOption[] = [{ value: '', label: nls.localize('sidexNoDefaultModel', 'No default (use first available)') }, ...this._modelOptions];
+		const options: ModelOption[] = [
+			{ value: '', label: nls.localize('sidexNoDefaultModel', 'No default (use first available)') },
+			...this._modelOptions
+		];
 		this._addSelectRow(
 			card,
 			nls.localize('sidexDefaultModel', 'Default AI Model'),
-			nls.localize('sidexDefaultModelDescription', 'Select which AI model new conversations will start with by default.'),
+			nls.localize(
+				'sidexDefaultModelDescription',
+				'Select which AI model new conversations will start with by default.'
+			),
 			options,
 			this._getSetting('defaultModel', '') as string,
 			'sidex.general.defaultModel'
@@ -243,9 +333,7 @@ export class GeneralSection implements SettingsSection {
 	}
 
 	private _parseStoredSettings(data: SettingsData): SettingsData {
-		return Object.fromEntries(
-			Object.entries(data).map(([key, value]) => [key, this._parseStoredValue(value)])
-		);
+		return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, this._parseStoredValue(value)]));
 	}
 
 	private _parseStoredValue(value: unknown): unknown {
@@ -261,22 +349,29 @@ export class GeneralSection implements SettingsSection {
 	}
 
 	private _saveSetting(key: string, value: unknown): void {
-		if (!this._invoke) { return; }
-		this._invoke('settings_update', { key, value, scope: 'user' }).then(() => {
-			if (key === 'sidex.agent.enabled' && typeof value === 'boolean') {
-				setLocalServerEnabled(value);
-			}
-			window.dispatchEvent(new CustomEvent('sidex-settings-changed'));
-		}).catch(() => {});
+		if (!this._invoke) {
+			return;
+		}
+		this._invoke('settings_update', { key, value, scope: 'user' })
+			.then(() => {
+				if (key === 'sidex.agent.enabled' && typeof value === 'boolean') {
+					setLocalServerEnabled(value);
+				}
+				window.dispatchEvent(new CustomEvent('sidex-settings-changed'));
+			})
+			.catch(() => {});
 	}
 
 	private _showToast(message: string): void {
 		const existing = document.querySelector('.sidex-settings-toast');
-		if (existing) { existing.remove(); }
+		if (existing) {
+			existing.remove();
+		}
 
 		const toast = document.createElement('div');
 		toast.className = 'sidex-settings-toast';
-		toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:6px;font-size:12px;z-index:10000;';
+		toast.style.cssText =
+			'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:6px;font-size:12px;z-index:10000;';
 		toast.style.background = 'var(--vscode-notifications-background)';
 		toast.style.color = 'var(--vscode-notifications-foreground)';
 		toast.style.border = '1px solid var(--vscode-widget-border)';
@@ -334,7 +429,13 @@ export class GeneralSection implements SettingsSection {
 		row.querySelector('.sidex-settings-row-action')!.appendChild(btn);
 	}
 
-	private _addToggleRow(parent: HTMLElement, label: string, description: string, settingKey: string, initialState: boolean): HTMLElement {
+	private _addToggleRow(
+		parent: HTMLElement,
+		label: string,
+		description: string,
+		settingKey: string,
+		initialState: boolean
+	): HTMLElement {
 		const row = this._createRow(parent, label, description);
 		const toggle = document.createElement('div');
 		toggle.className = 'sidex-settings-toggle' + (initialState ? ' on' : '');
@@ -351,9 +452,16 @@ export class GeneralSection implements SettingsSection {
 		return row;
 	}
 
-	private _addSelectRow(parent: HTMLElement, label: string, description: string, options: any[], currentValue: string, settingKey: string): HTMLElement {
+	private _addSelectRow(
+		parent: HTMLElement,
+		label: string,
+		description: string,
+		options: any[],
+		currentValue: string,
+		settingKey: string
+	): HTMLElement {
 		const row = this._createRow(parent, label, description);
-		const dropdown = createCustomDropdown(options, currentValue, (newValue) => {
+		const dropdown = createCustomDropdown(options, currentValue, newValue => {
 			this._saveSetting(settingKey, newValue);
 		});
 		row.querySelector('.sidex-settings-row-action')!.appendChild(dropdown);

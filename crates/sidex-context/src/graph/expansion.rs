@@ -10,8 +10,7 @@ fn edge_priority(kind: &EdgeKind) -> f64 {
         EdgeKind::Calls => 1.0,
         EdgeKind::Contains => 0.8,
         EdgeKind::Imports => 0.6,
-        EdgeKind::Inherits => 0.7,
-        EdgeKind::Implements => 0.7,
+        EdgeKind::Inherits | EdgeKind::Implements => 0.7,
         EdgeKind::References => 0.3,
     }
 }
@@ -20,10 +19,10 @@ fn edge_priority(kind: &EdgeKind) -> f64 {
 ///
 /// Returns additional chunk IDs (not in the initial set) scored by relevance,
 /// sorted descending and truncated to `max_expansion`.
-pub fn expand_results(
+pub fn expand_results<S: std::hash::BuildHasher>(
     initial_chunk_ids: &[String],
     graph: &CodeGraph,
-    _all_chunks: &HashMap<String, &Chunk>,
+    _all_chunks: &HashMap<String, &Chunk, S>,
     max_expansion: usize,
 ) -> Vec<(String, f64)> {
     let initial_set: HashSet<&str> = initial_chunk_ids.iter().map(String::as_str).collect();

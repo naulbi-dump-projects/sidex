@@ -39,7 +39,6 @@ pub fn current_target_platform() -> &'static str {
         ("linux", "aarch64", true) => "alpine-arm64",
         ("linux", _, true) => "alpine-x64",
         ("linux", "aarch64", false) => "linux-arm64",
-        ("linux", _, false) => "linux-x64",
         _ => "linux-x64",
     }
 }

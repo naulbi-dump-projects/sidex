@@ -27,6 +27,10 @@ pub struct ReflexionEntry {
     pub helped_count: i32,
 }
 
+fn sqlite_limit(limit: usize) -> i64 {
+    i64::try_from(limit).unwrap_or(i64::MAX)
+}
+
 impl ReflexionStore {
     pub fn open(path: &Path) -> Result<Self> {
         let conn = Connection::open(path).context("open reflexion store database")?;
@@ -116,7 +120,7 @@ impl ReflexionStore {
                 entry.id,
                 entry.task_description,
                 entry.attempt,
-                entry.succeeded as i32,
+                i32::from(entry.succeeded),
                 entry.reflection,
                 entry.code_context,
                 entry.error_type,
@@ -156,7 +160,7 @@ impl ReflexionStore {
                     entry.id,
                     entry.task_description,
                     entry.attempt,
-                    entry.succeeded as i32,
+                    i32::from(entry.succeeded),
                     entry.reflection,
                     entry.code_context,
                     entry.error_type,
@@ -196,7 +200,7 @@ impl ReflexionStore {
             .context("prepare reflexion search")?;
 
         let rows = stmt
-            .query_map(params![query, min_confidence, limit as i64], |row| {
+            .query_map(params![query, min_confidence, sqlite_limit(limit)], |row| {
                 Ok(ReflexionEntry {
                     id: row.get(0)?,
                     task_description: row.get(1)?,
@@ -239,7 +243,7 @@ impl ReflexionStore {
             )
             .context("prepare get_above_confidence")?;
 
-        Self::collect_rows(&mut stmt, params![min_confidence, limit as i64])
+        Self::collect_rows(&mut stmt, params![min_confidence, sqlite_limit(limit)])
     }
 
     /// Get entries by error type.
@@ -257,7 +261,7 @@ impl ReflexionStore {
             )
             .context("prepare get_by_error_type")?;
 
-        Self::collect_rows(&mut stmt, params![error_type, limit as i64])
+        Self::collect_rows(&mut stmt, params![error_type, sqlite_limit(limit)])
     }
 
     /// Update the confidence score for an entry.
@@ -308,7 +312,7 @@ impl ReflexionStore {
         let n: i64 = conn
             .query_row("SELECT COUNT(*) FROM reflexion_entries", [], |r| r.get(0))
             .context("count reflexion entries")?;
-        Ok(n as usize)
+        usize::try_from(n).context("reflexion entry count does not fit usize")
     }
 
     /// Delete a specific entry by ID.
@@ -367,7 +371,7 @@ mod tests {
             } else {
                 Some("logic".to_string())
             },
-            timestamp: 1700000000,
+            timestamp: 1_700_000_000,
             confidence: 0.7,
             usage_count: 0,
             helped_count: 0,

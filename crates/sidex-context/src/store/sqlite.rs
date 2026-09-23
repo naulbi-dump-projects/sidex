@@ -15,6 +15,10 @@ pub struct SqliteChunkStore {
     conn: Mutex<Connection>,
 }
 
+fn sqlite_i64(value: usize) -> i64 {
+    i64::try_from(value).unwrap_or(i64::MAX)
+}
+
 impl SqliteChunkStore {
     /// Open (or create) a chunk store at `path`.
     pub fn open(path: &Path) -> Result<Self> {
@@ -63,7 +67,7 @@ impl SqliteChunkStore {
         let n: i64 = conn
             .query_row("SELECT COUNT(*) FROM chunks", [], |r| r.get(0))
             .context("count chunks")?;
-        Ok(n as usize)
+        usize::try_from(n).context("chunk count does not fit usize")
     }
 
     /// Get chunks matching a name prefix (e.g. function name search).
@@ -103,8 +107,8 @@ impl SqliteChunkStore {
                 Ok(Chunk {
                     id: row.get(0)?,
                     file_path: row.get(1)?,
-                    start_line: row.get::<_, i64>(2)? as usize,
-                    end_line: row.get::<_, i64>(3)? as usize,
+                    start_line: row.get(2)?,
+                    end_line: row.get(3)?,
                     kind: parse_chunk_kind(&row.get::<_, String>(4)?),
                     name: row.get(5)?,
                     language: row.get(6)?,
@@ -150,8 +154,8 @@ impl ChunkStore for SqliteChunkStore {
                 stmt.execute(params![
                     c.id,
                     c.file_path,
-                    c.start_line as i64,
-                    c.end_line as i64,
+                    sqlite_i64(c.start_line),
+                    sqlite_i64(c.end_line),
                     c.kind.to_string(),
                     c.name,
                     c.language,
@@ -233,10 +237,10 @@ mod tests {
             kind,
             name: Some(name.to_string()),
             language: "rust".to_string(),
-            content: format!("fn {}() {{}}", name),
-            content_hash: format!("hash_{}", id),
+            content: format!("fn {name}() {{}}"),
+            content_hash: format!("hash_{id}"),
             parent_name: None,
-            signature: Some(format!("fn {}()", name)),
+            signature: Some(format!("fn {name}()")),
         }
     }
 

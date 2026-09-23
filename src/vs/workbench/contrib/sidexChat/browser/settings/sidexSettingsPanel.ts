@@ -43,7 +43,7 @@ const NAV_ITEMS: NavItem[] = [
 	{ id: 'notifications', label: nls.localize('sidexSettingsNotifications', 'Notifications'), icon: 'codicon-bell' },
 	{ type: 'separator' },
 	{ id: 'indexing', label: nls.localize('sidexSettingsIndexing', 'Indexing & Stats'), icon: 'codicon-database' },
-	{ id: 'privacy', label: nls.localize('sidexSettingsPrivacy', 'Privacy'), icon: 'codicon-lock' },
+	{ id: 'privacy', label: nls.localize('sidexSettingsPrivacy', 'Privacy'), icon: 'codicon-lock' }
 ];
 
 let _instance: SidexSettingsPanel | null = null;
@@ -79,7 +79,9 @@ export class SidexSettingsPanel extends Disposable {
 	}
 
 	private _getTauriInvoke(): ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null {
-		const g = globalThis as unknown as { __TAURI_INTERNALS__?: { invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown> } };
+		const g = globalThis as unknown as {
+			__TAURI_INTERNALS__?: { invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown> };
+		};
 		return g.__TAURI_INTERNALS__?.invoke ?? null;
 	}
 
@@ -124,13 +126,15 @@ export class SidexSettingsPanel extends Disposable {
 		// .modal-editor-shadow — inherits box-shadow, border-radius
 		const shadow = document.createElement('div');
 		shadow.className = 'modal-editor-shadow';
-		shadow.style.cssText = 'box-shadow:0 8px 32px rgba(0,0,0,0.5);border-radius:8px;overflow:hidden;width:100%;height:100%;';
+		shadow.style.cssText =
+			'box-shadow:0 8px 32px rgba(0,0,0,0.5);border-radius:8px;overflow:hidden;width:100%;height:100%;';
 		resizable.appendChild(shadow);
 
 		// .modal-editor-part.has-sidebar — the grid container
 		const part = document.createElement('div');
 		part.className = 'part editor modal-editor-part has-sidebar';
-		part.style.cssText = 'display:grid;grid-template-rows:auto 1fr;grid-template-columns:auto 1fr;width:100%;height:100%;background-color:var(--vscode-sideBar-background, #141414);border:1px solid var(--vscode-editorWidget-border, rgba(255,255,255,0.09));border-radius:8px;overflow:hidden;position:relative;';
+		part.style.cssText =
+			'display:grid;grid-template-rows:auto 1fr;grid-template-columns:auto 1fr;width:100%;height:100%;background-color:var(--vscode-sideBar-background, #141414);border:1px solid var(--vscode-editorWidget-border, rgba(255,255,255,0.09));border-radius:8px;overflow:hidden;position:relative;';
 		part.setAttribute('role', 'dialog');
 		part.setAttribute('aria-modal', 'true');
 		part.setAttribute('aria-labelledby', 'sidex-modal-editor-title');
@@ -145,12 +149,14 @@ export class SidexSettingsPanel extends Disposable {
 		// .content — the right pane, scrollable
 		const contentWrapper = document.createElement('div');
 		contentWrapper.className = 'content';
-		contentWrapper.style.cssText = 'grid-column:2;grid-row:2;overflow:hidden;min-width:0;min-height:0;position:relative;background-color:var(--vscode-sideBar-background, #141414);';
+		contentWrapper.style.cssText =
+			'grid-column:2;grid-row:2;overflow:hidden;min-width:0;min-height:0;position:relative;background-color:var(--vscode-sideBar-background, #141414);';
 		part.appendChild(contentWrapper);
 
 		this._content = document.createElement('div');
 		this._content.className = 'sidex-settings-content';
-		this._content.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:scroll;overflow-x:hidden;scrollbar-width:none;padding-bottom:50vh;box-sizing:border-box;';
+		this._content.style.cssText =
+			'position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:scroll;overflow-x:hidden;scrollbar-width:none;padding-bottom:50vh;box-sizing:border-box;';
 		contentWrapper.appendChild(this._content);
 
 		// Custom scrollbar overlay (mimics VS Code's .invisible.scrollbar.vertical.fade)
@@ -161,14 +167,17 @@ export class SidexSettingsPanel extends Disposable {
 		scrollbar.style.cssText = 'position:absolute;width:10px;right:0;top:0;bottom:0;';
 		const slider = document.createElement('div');
 		slider.className = 'slider';
-		slider.style.cssText = 'position:absolute;top:0;left:0;width:10px;contain:strict;border-radius:5px;min-height:20px;';
+		slider.style.cssText =
+			'position:absolute;top:0;left:0;width:10px;contain:strict;border-radius:5px;min-height:20px;';
 		scrollbar.appendChild(slider);
 		contentWrapper.appendChild(scrollbar);
 
 		let fadeTimeout: ReturnType<typeof setTimeout> | null = null;
 		const showScrollbar = () => {
 			scrollbar.className = 'visible scrollbar vertical fade';
-			if (fadeTimeout) { clearTimeout(fadeTimeout); }
+			if (fadeTimeout) {
+				clearTimeout(fadeTimeout);
+			}
 			fadeTimeout = setTimeout(() => {
 				scrollbar.className = 'invisible scrollbar vertical fade';
 			}, 1000);
@@ -200,7 +209,7 @@ export class SidexSettingsPanel extends Disposable {
 
 				const contentRect = this._content.getBoundingClientRect();
 
-				scrollSections.forEach((section) => {
+				scrollSections.forEach(section => {
 					const rect = section.getBoundingClientRect();
 					const relativeTop = rect.top - contentRect.top;
 					// Target the section that has started/passed the top of the viewport (relativeTop <= 60)
@@ -222,12 +231,16 @@ export class SidexSettingsPanel extends Disposable {
 		});
 
 		// Force wheel events to scroll the content (bypasses any parent interception)
-		contentWrapper.addEventListener('wheel', (e) => {
-			this._content.scrollTop += e.deltaY;
-			this._content.scrollLeft += e.deltaX;
-			e.preventDefault();
-			e.stopPropagation();
-		}, { passive: false });
+		contentWrapper.addEventListener(
+			'wheel',
+			e => {
+				this._content.scrollTop += e.deltaY;
+				this._content.scrollLeft += e.deltaX;
+				e.preventDefault();
+				e.stopPropagation();
+			},
+			{ passive: false }
+		);
 
 		// Update slider on resize
 		const resizeObserver = new ResizeObserver(() => updateSlider());
@@ -381,7 +394,8 @@ export class SidexSettingsPanel extends Disposable {
 	private _buildSidebar(part: HTMLElement): void {
 		const sidebar = document.createElement('div');
 		sidebar.className = 'modal-editor-sidebar';
-		sidebar.style.cssText = 'grid-row:2;grid-column:1;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:8px;background-color:var(--vscode-sideBar-background, #181818);border-right:1px solid var(--vscode-sideBarSectionHeader-border, rgba(255,255,255,0.09));width:240px;';
+		sidebar.style.cssText =
+			'grid-row:2;grid-column:1;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:8px;background-color:var(--vscode-sideBar-background, #181818);border-right:1px solid var(--vscode-sideBarSectionHeader-border, rgba(255,255,255,0.09));width:240px;';
 
 		// Account (First now!)
 		this._accountContainer = document.createElement('div');
@@ -393,7 +407,7 @@ export class SidexSettingsPanel extends Disposable {
 		searchContainer.className = 'sidex-settings-search';
 		const searchWrapper = document.createElement('div');
 		searchWrapper.className = 'sidex-search-wrapper';
-		
+
 		const searchIcon = document.createElement('span');
 		searchIcon.className = 'codicon codicon-search';
 		searchIcon.style.cssText = 'font-size:12px; opacity:0.5; margin-left:8px; margin-right:4px; flex-shrink:0;';
@@ -464,7 +478,9 @@ export class SidexSettingsPanel extends Disposable {
 			}
 
 			el.addEventListener('click', () => {
-				if (el.classList.contains('disabled')) { return; }
+				if (el.classList.contains('disabled')) {
+					return;
+				}
 				if (item.external) {
 					this._handleExternalNav(item.id!);
 					return;
@@ -491,10 +507,13 @@ export class SidexSettingsPanel extends Disposable {
 						} else if (commandService) {
 							commandService.executeCommand('workbench.action.openSettings2');
 						}
-					} catch { /* ignore */ }
+					} catch {
+						/* ignore */
+					}
 				}, 50);
 				break;
-			case 'marketplace': break;
+			case 'marketplace':
+				break;
 				break;
 			case 'docs':
 				// The old docs subdomain is dead and no replacement is hosted yet; the README is the real docs entry point.
@@ -507,14 +526,16 @@ export class SidexSettingsPanel extends Disposable {
 		const lowerQuery = query.toLowerCase();
 		for (const [id, el] of this._navElements) {
 			const item = NAV_ITEMS.find(n => n.id === id);
-			if (!item || !item.label) { continue; }
+			if (!item || !item.label) {
+				continue;
+			}
 			const matches = !query || item.label.toLowerCase().includes(lowerQuery);
 			el.style.display = matches ? '' : 'none';
 		}
 	}
 
 	private _bindEvents(): void {
-		this._overlay.addEventListener('mousedown', (e) => {
+		this._overlay.addEventListener('mousedown', e => {
 			if (e.target === this._overlay) {
 				this.close();
 			}
@@ -547,8 +568,10 @@ export class SidexSettingsPanel extends Disposable {
 
 		if (invoke) {
 			try {
-				session = await invoke('auth_get_session') as typeof session;
-			} catch { /* the panel still renders without a profile */ }
+				session = (await invoke('auth_get_session')) as typeof session;
+			} catch {
+				/* the panel still renders without a profile */
+			}
 		}
 
 		// There is no signed-out state: the profile is the local machine user.
@@ -557,51 +580,50 @@ export class SidexSettingsPanel extends Disposable {
 			return;
 		}
 
-	const user = session.user;
+		const user = session.user;
 
-	this._accountContainer.innerHTML = '';
-	const info = document.createElement('div');
-	info.className = 'sidex-settings-account-info';
-	info.style.cssText = 'display:flex;align-items:center;gap:10px;';
+		this._accountContainer.innerHTML = '';
+		const info = document.createElement('div');
+		info.className = 'sidex-settings-account-info';
+		info.style.cssText = 'display:flex;align-items:center;gap:10px;';
 
-	// Create user profile avatar on the left
-	const avatar = document.createElement('div');
-	avatar.className = 'sidex-settings-account-avatar';
-	avatar.style.cssText = 'width:32px;height:32px;border-radius:6px;background:var(--vscode-menu-background, var(--vscode-dropdown-background));color:var(--vscode-foreground, #ccc);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;text-transform:uppercase;flex-shrink:0;user-select:none;';
-	
-	let initials = '';
-	if (user.name && user.name.trim()) {
-		const parts = user.name.trim().split(/\s+/);
-		if (parts.length >= 2) {
-			initials = (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
-		} else if (parts.length === 1) {
-			initials = parts[0].substring(0, 2).toUpperCase();
+		// Create user profile avatar on the left
+		const avatar = document.createElement('div');
+		avatar.className = 'sidex-settings-account-avatar';
+		avatar.style.cssText =
+			'width:32px;height:32px;border-radius:6px;background:var(--vscode-menu-background, var(--vscode-dropdown-background));color:var(--vscode-foreground, #ccc);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;text-transform:uppercase;flex-shrink:0;user-select:none;';
+
+		let initials = '';
+		if (user.name && user.name.trim()) {
+			const parts = user.name.trim().split(/\s+/);
+			if (parts.length >= 2) {
+				initials = (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+			} else if (parts.length === 1) {
+				initials = parts[0].substring(0, 2).toUpperCase();
+			}
 		}
+		if (!initials && user.email) {
+			const cleanEmail = user.email.replace(/[^a-zA-Z0-9]/g, '');
+			initials = cleanEmail.substring(0, 2).toUpperCase();
+		}
+		if (!initials) {
+			initials = 'U';
+		}
+		avatar.textContent = initials;
+		info.appendChild(avatar);
+
+		const details = document.createElement('div');
+		details.className = 'sidex-settings-account-details';
+
+		const nameEl = document.createElement('div');
+		nameEl.className = 'sidex-settings-account-email';
+		nameEl.textContent = user.name;
+		details.appendChild(nameEl);
+
+		info.appendChild(details);
+
+		this._accountContainer.appendChild(info);
 	}
-	if (!initials && user.email) {
-		const cleanEmail = user.email.replace(/[^a-zA-Z0-9]/g, '');
-		initials = cleanEmail.substring(0, 2).toUpperCase();
-	}
-	if (!initials) {
-		initials = 'U';
-	}
-	avatar.textContent = initials;
-	info.appendChild(avatar);
-
-	const details = document.createElement('div');
-	details.className = 'sidex-settings-account-details';
-
-	const nameEl = document.createElement('div');
-	nameEl.className = 'sidex-settings-account-email';
-	nameEl.textContent = user.name;
-	details.appendChild(nameEl);
-
-
-	info.appendChild(details);
-
-	this._accountContainer.appendChild(info);
-}
-
 
 	private _updateActiveNav(id: string): void {
 		for (const [navId, el] of this._navElements) {
@@ -618,7 +640,11 @@ export class SidexSettingsPanel extends Disposable {
 	private _renderSection(): void {
 		for (const sec of this._sections) {
 			if (sec.dispose) {
-				try { sec.dispose(); } catch { /* ignore */ }
+				try {
+					sec.dispose();
+				} catch {
+					/* ignore */
+				}
 			}
 		}
 		this._sections = [];
@@ -712,7 +738,9 @@ export class SidexSettingsPanel extends Disposable {
 	}
 
 	open(): void {
-		if (this._isOpen) { return; }
+		if (this._isOpen) {
+			return;
+		}
 		this._isOpen = true;
 		this._renderAccount();
 		this._renderSection();
@@ -721,7 +749,9 @@ export class SidexSettingsPanel extends Disposable {
 	}
 
 	close(): void {
-		if (!this._isOpen) { return; }
+		if (!this._isOpen) {
+			return;
+		}
 		this._isOpen = false;
 		this._overlay.style.display = 'none';
 	}
@@ -747,7 +777,9 @@ export class SidexSettingsPanel extends Disposable {
 			this._isScrollingFromClick = true;
 			target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-			if (this._scrollSpyTimeout) { clearTimeout(this._scrollSpyTimeout); }
+			if (this._scrollSpyTimeout) {
+				clearTimeout(this._scrollSpyTimeout);
+			}
 			this._scrollSpyTimeout = setTimeout(() => {
 				this._isScrollingFromClick = false;
 			}, 800);
@@ -757,7 +789,11 @@ export class SidexSettingsPanel extends Disposable {
 	override dispose(): void {
 		for (const sec of this._sections) {
 			if (sec.dispose) {
-				try { sec.dispose(); } catch { /* ignore */ }
+				try {
+					sec.dispose();
+				} catch {
+					/* ignore */
+				}
 			}
 		}
 		this._sections = [];

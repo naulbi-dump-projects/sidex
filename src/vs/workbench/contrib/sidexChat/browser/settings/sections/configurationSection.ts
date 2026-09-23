@@ -53,17 +53,25 @@ export class ConfigurationSection implements SettingsSection {
 
 		if (this._invoke) {
 			try {
-				const data = await this._invoke('settings_get', { section: 'sidex.cascade' }) as SettingsData | null;
+				const data = (await this._invoke('settings_get', { section: 'sidex.cascade' })) as SettingsData | null;
 				if (data) {
 					this._settings = data;
 					const origins = this._parseStringList(data.allowedOrigins);
-					if (origins) { this._origins = origins; }
+					if (origins) {
+						this._origins = origins;
+					}
 					const allowList = this._parseStringList(data.allowList);
-					if (allowList) { this._allowList = allowList; }
+					if (allowList) {
+						this._allowList = allowList;
+					}
 					const denyList = this._parseStringList(data.denyList);
-					if (denyList) { this._denyList = denyList; }
+					if (denyList) {
+						this._denyList = denyList;
+					}
 				}
-			} catch { /* use defaults */ }
+			} catch {
+				/* use defaults */
+			}
 		}
 
 		const title = document.createElement('div');
@@ -75,20 +83,40 @@ export class ConfigurationSection implements SettingsSection {
 		card1.className = 'sidex-settings-card';
 
 		// 1. Allow Sidex in background
-		const bgRow = this._createRow(card1, 'Allow Sidex in background', 'Sidex keeps running when you switch conversations. Terminal commands may run in the background depending on your auto execution setting');
+		const bgRow = this._createRow(
+			card1,
+			'Allow Sidex in background',
+			'Sidex keeps running when you switch conversations. Terminal commands may run in the background depending on your auto execution setting'
+		);
 		this._addToggle(bgRow, this._getSetting('background', true) as boolean, 'sidex.cascade.background');
 
 		// 2. Auto-open edited files
-		const openFilesRow = this._createRow(card1, 'Auto-open edited files', 'Open files in the background if Sidex creates or edits them');
+		const openFilesRow = this._createRow(
+			card1,
+			'Auto-open edited files',
+			'Open files in the background if Sidex creates or edits them'
+		);
 		this._addToggle(openFilesRow, this._getSetting('autoOpenFiles', true) as boolean, 'sidex.cascade.autoOpenFiles');
 
 		// 3. Sidex preview
-		const previewsRow = this._createRow(card1, 'Sidex preview', 'Sidex opens browser previews of dev servers it starts, integrating tightly with your workflow');
+		const previewsRow = this._createRow(
+			card1,
+			'Sidex preview',
+			'Sidex opens browser previews of dev servers it starts, integrating tightly with your workflow'
+		);
 		this._addToggle(previewsRow, this._getSetting('previews', true) as boolean, 'sidex.cascade.previews');
 
 		// 4. Gitignore access
-		const gitignoreRow = this._createRow(card1, 'Gitignore access', 'Let Sidex, tab, and supercomplete view and edit files in .gitignore');
-		this._addToggle(gitignoreRow, this._getSetting('gitignoreAccess', false) as boolean, 'sidex.cascade.gitignoreAccess');
+		const gitignoreRow = this._createRow(
+			card1,
+			'Gitignore access',
+			'Let Sidex, tab, and supercomplete view and edit files in .gitignore'
+		);
+		this._addToggle(
+			gitignoreRow,
+			this._getSetting('gitignoreAccess', false) as boolean,
+			'sidex.cascade.gitignoreAccess'
+		);
 
 		container.appendChild(card1);
 
@@ -97,8 +125,17 @@ export class ConfigurationSection implements SettingsSection {
 		card3.className = 'sidex-settings-card';
 
 		// 15. Auto web requests policy
-		const reqRow = this._createRow(card3, 'Auto web requests', 'Disabled (manual approval), Allowlist (only approved origins), Turbo (always fetch)');
-		this._addSelect(reqRow, ['Disabled', 'Allowlist', 'Turbo'], this._getSetting('autoWebRequestsPolicy', 'Allowlist') as string, 'sidex.cascade.autoWebRequestsPolicy');
+		const reqRow = this._createRow(
+			card3,
+			'Auto web requests',
+			'Disabled (manual approval), Allowlist (only approved origins), Turbo (always fetch)'
+		);
+		this._addSelect(
+			reqRow,
+			['Disabled', 'Allowlist', 'Turbo'],
+			this._getSetting('autoWebRequestsPolicy', 'Allowlist') as string,
+			'sidex.cascade.autoWebRequestsPolicy'
+		);
 
 		// 15a. Allowed origins list box
 		this._originsContainer = document.createElement('div');
@@ -172,7 +209,7 @@ export class ConfigurationSection implements SettingsSection {
 	}
 
 	private _addSelect(row: HTMLElement, options: string[], defaultValue: string, settingKey: string): HTMLElement {
-		const dropdown = createCustomDropdown(options, defaultValue, (newValue) => {
+		const dropdown = createCustomDropdown(options, defaultValue, newValue => {
 			if (this._invoke) {
 				this._invoke('settings_update', { key: settingKey, value: newValue, scope: 'user' }).catch(() => {});
 			}
@@ -182,13 +219,19 @@ export class ConfigurationSection implements SettingsSection {
 	}
 
 	// Allowed/Denied Command Lists Renderer
-	private _renderCommandListSection(container: HTMLElement, label: string, description: string, key: 'allowList' | 'denyList', list: string[]): void {
+	private _renderCommandListSection(
+		container: HTMLElement,
+		label: string,
+		description: string,
+		key: 'allowList' | 'denyList',
+		list: string[]
+	): void {
 		container.innerHTML = '';
 		container.style.cssText = 'padding: 14px 20px 20px;';
 
 		const header = document.createElement('div');
 		header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;';
-		
+
 		const title = document.createElement('div');
 		const lbl = document.createElement('div');
 		lbl.style.cssText = 'font-size:13px; font-weight:500; color:var(--vscode-foreground);';
@@ -220,10 +263,11 @@ export class ConfigurationSection implements SettingsSection {
 		const listScroll = document.createElement('div');
 		listScroll.className = 'sidex-settings-list-scroll';
 		listBox.appendChild(listScroll);
-		
+
 		if (list.length === 0) {
 			const empty = document.createElement('div');
-			empty.style.cssText = 'display:flex; align-items:center; justify-content:center; height:120px; font-size:12px; color:var(--vscode-descriptionForeground);';
+			empty.style.cssText =
+				'display:flex; align-items:center; justify-content:center; height:120px; font-size:12px; color:var(--vscode-descriptionForeground);';
 			empty.textContent = 'No items';
 			listScroll.appendChild(empty);
 		} else {
@@ -275,13 +319,15 @@ export class ConfigurationSection implements SettingsSection {
 		container.style.cssText = 'padding: 14px 20px 20px;';
 
 		const textDesc = document.createElement('p');
-		textDesc.style.cssText = 'font-size:12px; color:var(--vscode-descriptionForeground); margin:0 0 12px; line-height:1.5;';
-		textDesc.textContent = 'Origins must include the scheme and port if non-default (e.g., "https://github.com" or "http://localhost:3000").';
+		textDesc.style.cssText =
+			'font-size:12px; color:var(--vscode-descriptionForeground); margin:0 0 12px; line-height:1.5;';
+		textDesc.textContent =
+			'Origins must include the scheme and port if non-default (e.g., "https://github.com" or "http://localhost:3000").';
 		container.appendChild(textDesc);
 
 		const header = document.createElement('div');
 		header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;';
-		
+
 		const title = document.createElement('div');
 		const lbl = document.createElement('div');
 		lbl.style.cssText = 'font-size:13px; font-weight:500; color:var(--vscode-foreground);';
@@ -316,7 +362,8 @@ export class ConfigurationSection implements SettingsSection {
 
 		if (this._origins.length === 0) {
 			const empty = document.createElement('div');
-			empty.style.cssText = 'display:flex; align-items:center; justify-content:center; height:120px; font-size:12px; color:var(--vscode-descriptionForeground);';
+			empty.style.cssText =
+				'display:flex; align-items:center; justify-content:center; height:120px; font-size:12px; color:var(--vscode-descriptionForeground);';
 			empty.textContent = 'No items';
 			listScroll.appendChild(empty);
 		} else {

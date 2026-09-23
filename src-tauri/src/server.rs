@@ -29,8 +29,8 @@ use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 use crate::commands::providers;
-use crate::commands::settings::SettingsStore;
 use crate::commands::secrets::SecretsStore;
+use crate::commands::settings::SettingsStore;
 
 /// How long to wait for the server to answer `/v1/health` before giving up.
 const STARTUP_TIMEOUT: Duration = Duration::from_secs(20);
@@ -270,7 +270,9 @@ fn find_server_binary(app: &AppHandle) -> Option<PathBuf> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let cwd = std::env::current_dir().unwrap_or_default();
     for candidate in [
-        manifest_dir.join("../sidexai/sidex-server").join(SERVER_BIN),
+        manifest_dir
+            .join("../sidexai/sidex-server")
+            .join(SERVER_BIN),
         cwd.join("sidexai/sidex-server").join(SERVER_BIN),
         cwd.join("../sidexai/sidex-server").join(SERVER_BIN),
     ] {
@@ -767,8 +769,14 @@ mod tests {
     #[test]
     fn enabled_setting_accepts_native_and_legacy_boolean_values() {
         assert_eq!(parse_enabled_setting(&Value::Bool(true)), Some(true));
-        assert_eq!(parse_enabled_setting(&Value::String("false".to_string())), Some(false));
-        assert_eq!(parse_enabled_setting(&Value::String("not a boolean".to_string())), None);
+        assert_eq!(
+            parse_enabled_setting(&Value::String("false".to_string())),
+            Some(false)
+        );
+        assert_eq!(
+            parse_enabled_setting(&Value::String("not a boolean".to_string())),
+            None
+        );
         assert_eq!(parse_enabled_setting(&Value::Null), None);
     }
 

@@ -8,6 +8,12 @@ use super::watcher::{FileWatcher, IndexEvent};
 use crate::chunker::{self, Chunk};
 use crate::search::bm25::Bm25Index;
 
+const MAX_TOTAL_CHUNKS: usize = 50_000;
+
+fn elapsed_millis(start: Instant) -> u64 {
+    u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX)
+}
+
 #[derive(Debug, Default)]
 pub struct IndexStats {
     pub files_indexed: usize,
@@ -42,7 +48,6 @@ impl IncrementalIndexer {
         let mut chunks = chunker::chunk_directory(&self.workspace_root, &self.workspace_root)?;
 
         // Cap total chunks to avoid memory blowup on huge repos
-        const MAX_TOTAL_CHUNKS: usize = 50_000;
         if chunks.len() > MAX_TOTAL_CHUNKS {
             chunks.truncate(MAX_TOTAL_CHUNKS);
         }
@@ -62,7 +67,7 @@ impl IncrementalIndexer {
             chunks_indexed: chunk_count,
             files_updated: 0,
             files_removed: 0,
-            elapsed_ms: start.elapsed().as_millis() as u64,
+            elapsed_ms: elapsed_millis(start),
         })
     }
 
@@ -132,16 +137,13 @@ impl IncrementalIndexer {
 
             self.bm25.remove_file(rel_path);
 
-            match chunker::chunk_file(&abs_path, &self.workspace_root) {
-                Ok(new_chunks) => {
-                    if !new_chunks.is_empty() {
-                        self.bm25.add_chunks(new_chunks);
-                    }
-                    stats.files_updated += 1;
+            if let Ok(new_chunks) = chunker::chunk_file(&abs_path, &self.workspace_root) {
+                if !new_chunks.is_empty() {
+                    self.bm25.add_chunks(new_chunks);
                 }
-                Err(_) => {
-                    // File couldn't be chunked (binary, unsupported, etc.) — skip
-                }
+                stats.files_updated += 1;
+            } else {
+                // File couldn't be chunked (binary, unsupported, etc.) — skip
             }
         }
 
@@ -151,7 +153,7 @@ impl IncrementalIndexer {
         }
 
         stats.chunks_indexed = self.bm25.chunk_count();
-        stats.elapsed_ms = start.elapsed().as_millis() as u64;
+        stats.elapsed_ms = elapsed_millis(start);
         Ok(stats)
     }
 
