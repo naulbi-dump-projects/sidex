@@ -1,3 +1,5 @@
+#![allow(clippy::unused_async)]
+
 use crate::commands::extension_platform::ExtensionManifest;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};

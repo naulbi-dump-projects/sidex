@@ -238,7 +238,7 @@ impl McpConnection {
 
         let is_error = response
             .get("isError")
-            .and_then(|v| v.as_bool())
+            .and_then(serde_json::Value::as_bool)
             .unwrap_or(false);
 
         let content_array = response
@@ -407,7 +407,7 @@ impl McpConnection {
         self.child
             .try_wait()
             .ok()
-            .map_or(true, |status| status.is_none())
+            .is_none_or(|status| status.is_none())
     }
 
     async fn shutdown(&mut self) {
@@ -506,10 +506,7 @@ pub async fn mcp_list_servers(state: State<'_, McpState>) -> Result<Vec<McpServe
         .iter()
         .map(|c| {
             let connected = servers.contains_key(&c.name);
-            let tool_count = servers
-                .get(&c.name)
-                .map(|entry| entry.tools.len())
-                .unwrap_or(0);
+            let tool_count = servers.get(&c.name).map_or(0, |entry| entry.tools.len());
 
             McpServerStatus {
                 name: c.name.clone(),
@@ -534,7 +531,7 @@ pub async fn mcp_connect(
             .iter()
             .find(|c| c.name == server_name)
             .cloned()
-            .ok_or_else(|| format!("Server '{}' not found in config", server_name))?
+            .ok_or_else(|| format!("Server '{server_name}' not found in config"))?
     };
 
     if config.transport != "stdio" {
@@ -606,7 +603,7 @@ pub async fn mcp_call_tool(
         servers
             .get(&server)
             .map(|entry| Arc::clone(&entry.conn))
-            .ok_or_else(|| format!("Server '{}' is not connected", server))?
+            .ok_or_else(|| format!("Server '{server}' is not connected"))?
     };
 
     {
@@ -624,7 +621,7 @@ pub async fn mcp_call_tool(
             .iter()
             .find(|c| c.name == server)
             .cloned()
-            .ok_or_else(|| format!("Server '{}' not found in config", server))?
+            .ok_or_else(|| format!("Server '{server}' not found in config"))?
     };
 
     let new_conn = McpConnection::spawn(&config).await?;

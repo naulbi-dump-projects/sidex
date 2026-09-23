@@ -38,9 +38,8 @@ impl SettingsStore {
 
     /// Serialize the current user layer to the user settings file.
     fn persist_user_layer(&self) -> Result<(), String> {
-        let path = match self.user_path.read().map_err(|e| e.to_string())?.clone() {
-            Some(p) => p,
-            None => return Ok(()), // path unknown (tests/headless) — skip silently
+        let Some(path) = self.user_path.read().map_err(|e| e.to_string())?.clone() else {
+            return Ok(()); // path unknown (tests/headless) — skip silently
         };
         let layer = {
             let settings = self.inner.read().map_err(|e| e.to_string())?;
@@ -58,8 +57,7 @@ impl SettingsStore {
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_nanos())
-                .unwrap_or(0)
+                .map_or(0, |d| d.as_nanos())
         ));
         std::fs::write(&tmp, json).map_err(|e| e.to_string())?;
         std::fs::rename(&tmp, &path).map_err(|e| {
@@ -98,7 +96,7 @@ pub fn settings_get(
         }
 
         let section = settings.get_section(&key);
-        return if section.as_object().is_some_and(|values| values.is_empty()) {
+        return if section.as_object().is_some_and(serde_json::Map::is_empty) {
             Ok(Value::Null)
         } else {
             Ok(section)

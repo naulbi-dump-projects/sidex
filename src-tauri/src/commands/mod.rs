@@ -5,6 +5,7 @@ pub mod chat_sessions;
 pub mod compress;
 pub mod context_format;
 pub mod crypto;
+#[allow(dead_code)]
 pub mod db_state;
 pub mod debug;
 pub mod editor;
@@ -13,11 +14,13 @@ pub mod ext_api;
 pub mod ext_host;
 pub mod extension_diagnostics;
 pub mod extension_platform;
+#[allow(dead_code)]
 pub mod extension_wasm;
 pub mod extensions;
 pub mod fs;
 pub mod git;
 pub mod hooks;
+#[allow(dead_code)]
 pub mod index;
 pub mod keymap;
 pub mod lsp;
@@ -26,17 +29,23 @@ pub mod menu;
 pub mod models;
 pub mod next_gen_tools;
 pub mod orchestrate;
+#[allow(dead_code)]
 pub mod os;
 pub mod path;
+#[allow(dead_code)]
 pub mod process;
 pub mod profiles;
 pub mod providers;
+#[allow(dead_code)]
 pub mod proxy;
 pub mod remote;
+#[allow(dead_code)]
 pub mod search;
 pub mod secrets;
 pub mod settings;
+#[allow(dead_code)]
 pub mod storage;
+#[allow(dead_code)]
 pub mod syntax;
 pub mod tasks;
 pub mod terminal;

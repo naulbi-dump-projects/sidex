@@ -102,7 +102,7 @@ fn ensure_target_platform(url: &str) -> String {
     parsed.into()
 }
 
-/// Rewrites the platform embedded in a SideX Open VSX proxy VSIX URL.
+/// Rewrites the platform embedded in a `SideX` Open VSX proxy VSIX URL.
 ///
 /// The proxy's `vsix-<base64url>` segment contains the original Open VSX URL.
 /// It does not honor `targetPlatform` on the outer URL, so platform-specific
@@ -178,7 +178,7 @@ fn rewrite_proxy_vsix_platform(url: &str, new_platform: &str) -> String {
         return url.to_owned();
     }
 
-    upstream_segments[platform_index] = new_platform.to_owned();
+    new_platform.clone_into(&mut upstream_segments[platform_index]);
     upstream_segments[file_index + 1] = format!("{filename_prefix}@{new_platform}.vsix");
     upstream_url.set_path(&format!("/{}", upstream_segments.join("/")));
 

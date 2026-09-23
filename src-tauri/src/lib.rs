@@ -1,5 +1,6 @@
 mod app_dirs;
 mod commands;
+#[allow(dead_code)]
 mod server;
 
 use commands::auth::AuthState;
@@ -491,18 +492,15 @@ pub fn run() {
                 // Block path traversal, symlinks to sensitive files, and absolute paths
                 // outside the expected asset directories.
                 let path = std::path::Path::new(decoded.as_ref());
-                let canonical = match path.canonicalize() {
-                    Ok(p) => p,
-                    Err(_) => {
-                        responder.respond(
-                            tauri::http::Response::builder()
-                                .status(404)
-                                .header("Access-Control-Allow-Origin", "*")
-                                .body(Vec::new())
-                                .unwrap(),
-                        );
-                        return;
-                    }
+                let Ok(canonical) = path.canonicalize() else {
+                    responder.respond(
+                        tauri::http::Response::builder()
+                            .status(404)
+                            .header("Access-Control-Allow-Origin", "*")
+                            .body(Vec::new())
+                            .unwrap(),
+                    );
+                    return;
                 };
 
                 // Only allow files within the user's workspace or common asset paths

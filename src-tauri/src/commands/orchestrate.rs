@@ -107,10 +107,13 @@ impl OrchestrationStore {
 }
 
 fn now_ms() -> u64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as u64
+    u64::try_from(
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis(),
+    )
+    .unwrap_or(u64::MAX)
 }
 
 fn build_system_prompt(task: &OrchTask) -> String {
@@ -232,6 +235,7 @@ pub async fn orch_add_tasks(
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 #[tauri::command]
 pub async fn orch_spawn_task(
     app: AppHandle,
@@ -329,16 +333,14 @@ pub async fn orch_spawn_task(
         )
         .await;
 
-        let mut run = match run_arc_clone.lock() {
-            Ok(r) => r,
-            Err(_) => return,
+        let Ok(mut run) = run_arc_clone.lock() else {
+            return;
         };
 
         run.running.retain(|r| r.task_id != task_id_clone);
 
-        let task = match run.plan.tasks.iter_mut().find(|t| t.id == task_id_clone) {
-            Some(t) => t,
-            None => return,
+        let Some(task) = run.plan.tasks.iter_mut().find(|t| t.id == task_id_clone) else {
+            return;
         };
 
         match result {
@@ -377,6 +379,7 @@ pub async fn orch_spawn_task(
     Ok(run_id)
 }
 
+#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
 async fn run_agent_session(
     server_url: &str,
     system_prompt: &str,
@@ -390,7 +393,7 @@ async fn run_agent_session(
     use futures_util::{SinkExt, StreamExt};
     use tokio_tungstenite::{connect_async, tungstenite::Message};
 
-    let ws_url = format!("{}/v1/stream", server_url.replace("ws://", "ws://"));
+    let ws_url = format!("{server_url}/v1/stream");
     let (ws_stream, _) = connect_async(&ws_url)
         .await
         .map_err(|e| format!("WebSocket connect failed: {e}"))?;
@@ -485,7 +488,7 @@ async fn run_agent_session(
                         }
                     }
                     Some(Ok(Message::Close(_))) | None => break,
-                    _ => continue,
+                    _ => {}
                 }
             }
         }
@@ -510,6 +513,7 @@ async fn run_agent_session(
     })
 }
 
+#[allow(clippy::needless_pass_by_value)]
 #[tauri::command]
 pub fn orch_cancel(
     app: AppHandle,
@@ -542,6 +546,7 @@ pub fn orch_cancel(
     Ok(())
 }
 
+#[allow(clippy::needless_pass_by_value)]
 #[tauri::command]
 pub fn orch_status(
     state: State<'_, Arc<OrchestrationStore>>,
@@ -555,6 +560,7 @@ pub fn orch_status(
     Ok(run.plan.clone())
 }
 
+#[allow(clippy::needless_pass_by_value)]
 #[tauri::command]
 pub fn orch_get_ready_tasks(
     state: State<'_, Arc<OrchestrationStore>>,
@@ -584,6 +590,7 @@ pub fn orch_get_ready_tasks(
     Ok(ready)
 }
 
+#[allow(clippy::needless_pass_by_value)]
 #[tauri::command]
 pub fn orch_get_handoffs(
     state: State<'_, Arc<OrchestrationStore>>,
@@ -597,6 +604,7 @@ pub fn orch_get_handoffs(
     Ok(run.handoffs.values().cloned().collect())
 }
 
+#[allow(clippy::needless_pass_by_value)]
 #[tauri::command]
 pub fn orch_list(state: State<'_, Arc<OrchestrationStore>>) -> Result<Vec<OrchPlan>, String> {
     let runs = state.runs.lock().map_err(|e| e.to_string())?;

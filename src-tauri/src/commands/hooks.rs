@@ -17,15 +17,9 @@ fn global_sidex_config_dir() -> PathBuf {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HookConfig {
     pub hooks: Vec<Hook>,
-}
-
-impl Default for HookConfig {
-    fn default() -> Self {
-        Self { hooks: Vec::new() }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -394,7 +388,7 @@ fn detect_interpreter(path: &str) -> String {
         Some("rb") => "ruby".into(),
         Some("js") => "node".into(),
         Some("ts") => "npx".into(),
-        Some("sh") | Some("bash") => "bash".into(),
+        Some("sh" | "bash") => "bash".into(),
         Some("zsh") => "zsh".into(),
         _ => "sh".into(),
     }
@@ -403,6 +397,7 @@ fn detect_interpreter(path: &str) -> String {
 // ─── Tauri Commands ──────────────────────────────────────────────────────────
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 pub fn hooks_list(state: State<'_, HooksState>) -> Result<Vec<Hook>, String> {
     let config = state.config.lock().map_err(|e| e.to_string())?;
     Ok(config.hooks.clone())
@@ -439,6 +434,7 @@ pub async fn hooks_trigger(
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 pub fn hooks_reload(state: State<'_, HooksState>) -> Result<(), String> {
     let new_config = load_merged_config(&state.config_paths);
     let mut config = state.config.lock().map_err(|e| e.to_string())?;
@@ -447,6 +443,7 @@ pub fn hooks_reload(state: State<'_, HooksState>) -> Result<(), String> {
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 pub fn hooks_add(state: State<'_, HooksState>, hook: Hook) -> Result<(), String> {
     let mut config = state.config.lock().map_err(|e| e.to_string())?;
 
@@ -460,6 +457,7 @@ pub fn hooks_add(state: State<'_, HooksState>, hook: Hook) -> Result<(), String>
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 pub fn hooks_remove(state: State<'_, HooksState>, name: String) -> Result<(), String> {
     let mut config = state.config.lock().map_err(|e| e.to_string())?;
     let before = config.hooks.len();
@@ -474,6 +472,7 @@ pub fn hooks_remove(state: State<'_, HooksState>, name: String) -> Result<(), St
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 pub fn hooks_toggle(
     state: State<'_, HooksState>,
     name: String,

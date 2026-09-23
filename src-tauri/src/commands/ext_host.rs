@@ -5,7 +5,7 @@ use crate::commands::extension_platform::{
 };
 use serde::{Deserialize, Serialize};
 use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -16,14 +16,14 @@ use tauri::AppHandle;
 use std::os::windows::process::CommandExt;
 
 /// Strip the Windows `\\?\` prefix; Node's CJS resolver chokes on UNC paths.
-fn normalize_for_node(path: PathBuf) -> PathBuf {
+fn normalize_for_node(path: &Path) -> PathBuf {
     #[cfg(windows)]
     {
-        dunce::simplified(&path).to_path_buf()
+        dunce::simplified(path).to_path_buf()
     }
     #[cfg(not(windows))]
     {
-        path
+        path.to_path_buf()
     }
 }
 
@@ -220,7 +220,7 @@ fn spawn_host_process(
     workspace_folders: &[String],
 ) -> Result<StartedSession, String> {
     let runtime = resolve_node_runtime(app)?;
-    let server_js = normalize_for_node(resolve_server_script(app));
+    let server_js = normalize_for_node(&resolve_server_script(app));
 
     if !server_js.exists() {
         return Err(format!(
@@ -262,7 +262,7 @@ fn spawn_host_process(
     )
     .map_err(|e| format!("failed to encode search paths: {e}"))?;
 
-    let init_data_file = std::env::temp_dir().join(format!("sidex-init-{}.json", &session_id));
+    let init_data_file = std::env::temp_dir().join(format!("sidex-init-{session_id}.json"));
     std::fs::write(&init_data_file, &init_data_json)
         .map_err(|e| format!("failed to write init data file: {e}"))?;
 

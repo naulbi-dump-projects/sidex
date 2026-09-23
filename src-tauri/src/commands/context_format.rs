@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sidex_context::format::toon::serialize_array;
+use std::fmt::Write as _;
 
 /// A single result from the context search index, used for formatted output.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,6 +17,7 @@ pub struct ContextSearchResult {
 ///
 /// Supported formats: `"toon"` (default), `"scf"` (compact tabular), `"json"`.
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 pub fn context_search_toon(
     results: Vec<ContextSearchResult>,
     format: Option<String>,
@@ -23,18 +25,21 @@ pub fn context_search_toon(
     let fmt = format.unwrap_or_else(|| "toon".to_string());
 
     match fmt.as_str() {
-        "toon" => Ok(serialize_array("results", &results)),
         "scf" => {
             let mut out = String::new();
-            out.push_str(&format!(
-                "@search[{}] file|line|name|kind|score\n",
+            writeln!(
+                &mut out,
+                "@search[{}] file|line|name|kind|score",
                 results.len()
-            ));
+            )
+            .expect("writing to a String cannot fail");
             for r in &results {
-                out.push_str(&format!(
-                    "{}|{}|{}|{}|{:.2}\n",
+                writeln!(
+                    &mut out,
+                    "{}|{}|{}|{}|{:.2}",
                     r.file, r.line, r.name, r.kind, r.score
-                ));
+                )
+                .expect("writing to a String cannot fail");
             }
             Ok(out)
         }
@@ -55,6 +60,7 @@ pub struct DiagnosticEntry {
 
 /// Format diagnostic entries into TOON serialization for context injection.
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
 pub fn format_diagnostics_toon(diagnostics: Vec<DiagnosticEntry>) -> Result<String, String> {
     Ok(serialize_array("diagnostics", &diagnostics))
 }
@@ -69,6 +75,7 @@ pub struct FileEntry {
 
 /// Format a flat file-tree listing into TOON serialization for context injection.
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
 pub fn format_file_tree_toon(entries: Vec<FileEntry>) -> Result<String, String> {
     Ok(serialize_array("files", &entries))
 }

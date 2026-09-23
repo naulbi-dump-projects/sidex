@@ -1,6 +1,6 @@
 //! Local agent server supervisor.
 //!
-//! SideX's agent loop, tools, MCP and memory all live in `sidex-server`. With
+//! `SideX`'s agent loop, tools, MCP and memory all live in `sidex-server`. With
 //! no account there is no hosted instance to talk to, so the app runs its own
 //! copy: a child process bound to loopback, started on launch and stopped when
 //! the app exits.
@@ -71,7 +71,7 @@ struct ServerProc {
     /// has been superseded — a manual restart, or app shutdown — and stand
     /// down instead of racing the new attempt for the child slot.
     generation: u64,
-    /// Whether SideX's bundled local agent is enabled. This is intentionally
+    /// Whether `SideX`'s bundled local agent is enabled. This is intentionally
     /// separate from any external or system agent configuration.
     enabled: bool,
 }
@@ -96,7 +96,10 @@ impl LocalServer {
     fn with_proc<T>(&self, f: impl FnOnce(&mut ServerProc) -> T) -> T {
         // A poisoned lock only means a previous holder panicked; the process
         // handle is still valid, so recover rather than propagate.
-        let mut guard = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        let mut guard = self
+            .inner
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         f(&mut guard)
     }
 
@@ -190,7 +193,7 @@ impl LocalServer {
         });
     }
 
-    /// Disable only the bundled SideX server and stop any supervised child.
+    /// Disable only the bundled `SideX` server and stop any supervised child.
     pub fn disable(&self) {
         self.shutdown();
         self.with_proc(|p| {
@@ -213,7 +216,7 @@ pub struct ServerEndpoint {
     pub http_url: String,
     pub port: u16,
     pub running: bool,
-    /// Whether SideX's bundled local agent is enabled.
+    /// Whether `SideX`'s bundled local agent is enabled.
     pub enabled: bool,
     /// Set when the server is not running and we know why. `None` while
     /// healthy, or before the first spawn attempt has reported back.
@@ -269,19 +272,15 @@ fn find_server_binary(app: &AppHandle) -> Option<PathBuf> {
     // there, but a launched .app does not).
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let cwd = std::env::current_dir().unwrap_or_default();
-    for candidate in [
+    [
         manifest_dir
             .join("../sidexai/sidex-server")
             .join(SERVER_BIN),
         cwd.join("sidexai/sidex-server").join(SERVER_BIN),
         cwd.join("../sidexai/sidex-server").join(SERVER_BIN),
-    ] {
-        if candidate.is_file() {
-            return Some(candidate);
-        }
-    }
-
-    None
+    ]
+    .into_iter()
+    .find(|candidate| candidate.is_file())
 }
 
 /// Block until the server answers its health endpoint, or the timeout expires.
@@ -543,7 +542,7 @@ fn run_supervised(
     }
 }
 
-/// Whether the bundled SideX agent should run. Invalid legacy values fall
+/// Whether the bundled `SideX` agent should run. Invalid legacy values fall
 /// back to the safe default: enabled.
 fn agent_enabled(app: &AppHandle) -> bool {
     let Some(settings) = app.try_state::<Arc<SettingsStore>>() else {
@@ -641,7 +640,7 @@ pub fn initialize(app: &AppHandle) {
     start(app, &server);
 }
 
-/// Synchronize the bundled SideX server with `sidex.agent.enabled`.
+/// Synchronize the bundled `SideX` server with `sidex.agent.enabled`.
 ///
 /// The setting controls this child process only; it does not discover, stop or
 /// reconfigure system agents or externally-run servers.
@@ -664,6 +663,7 @@ pub fn sync_enabled_from_settings(app: &AppHandle) -> Result<ServerEndpoint, Str
 }
 
 /// Restart the server so newly-saved provider credentials take effect.
+#[allow(clippy::needless_pass_by_value)]
 #[tauri::command]
 pub fn server_restart(app: AppHandle) -> Result<ServerEndpoint, String> {
     let server = app
@@ -885,7 +885,7 @@ mod tests {
             assert!(
                 p.error.is_none(),
                 "a superseded attempt must not report its own failure"
-            )
+            );
         });
     }
 

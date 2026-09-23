@@ -75,7 +75,9 @@ pub fn session_create(
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_err(|e| e.to_string())?
-        .as_secs() as i64;
+        .as_secs()
+        .try_into()
+        .unwrap_or(i64::MAX);
 
     sidex_db::create_session(
         &db,
@@ -121,6 +123,7 @@ pub fn session_load(
 }
 
 #[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub fn session_save_message(
     state: State<'_, Arc<SidexDbState>>,
@@ -137,7 +140,9 @@ pub fn session_save_message(
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
-            .as_secs() as i64
+            .as_secs()
+            .try_into()
+            .unwrap_or(i64::MAX)
     });
 
     sidex_db::save_message(

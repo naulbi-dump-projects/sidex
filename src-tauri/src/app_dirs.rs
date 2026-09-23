@@ -1,4 +1,4 @@
-//! Centralized application directory resolution for SideX.
+//! Centralized application directory resolution for `SideX`.
 //!
 //! On Linux, follows the XDG Base Directory Specification:
 //!   - Config/user data: `$XDG_CONFIG_HOME/SideX` (default `~/.config/SideX`)
@@ -9,14 +9,14 @@
 //! On Windows:
 //!   - `%APPDATA%/SideX`
 //!
-//! This matches the convention used by VSCode (`~/.config/Code`),
-//! Cursor (`~/.config/Cursor`), and VSCodium (`~/.config/VSCodium`).
+//! This matches the convention used by `VSCode` (`~/.config/Code`),
+//! Cursor (`~/.config/Cursor`), and `VSCodium` (`~/.config/VSCodium`).
 
 use std::path::PathBuf;
 
 const APP_NAME: &str = "SideX";
 
-/// Returns the primary application data directory for SideX.
+/// Returns the primary application data directory for `SideX`.
 ///
 /// This is where settings.json, databases, and other user data live.
 /// The path follows platform conventions and respects XDG on Linux.

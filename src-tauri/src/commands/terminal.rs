@@ -603,7 +603,7 @@ pub fn get_available_shells() -> Vec<ShellInfo> {
                 });
             }
         }
-        return shells;
+        shells
     }
 
     #[cfg(not(target_os = "windows"))]
