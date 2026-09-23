@@ -156,7 +156,7 @@ export function nlsPlugin(): Plugin {
 				this.emitFile({
 					type: 'asset',
 					fileName: 'nls.messages.json',
-					source: JSON.stringify(entries, null, 2)
+					source: JSON.stringify(entries)
 				});
 			}
 		}

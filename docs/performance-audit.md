@@ -1,0 +1,17 @@
+# Frontend performance audit (2026-09-23)
+
+Scope: Vite renderer build and localization startup. Measurements are from
+`npm run build` on Windows; bundle sizes are uncompressed unless marked gzip.
+This is a build-size and code-path inspection, not a CPU/memory profile of the
+Tauri application.
+
+| Area               | Evidence                                                                                                                                                                                                                              | Action / next step                                                                                                                                                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Localization index | `nls.messages.json` has 10,447 entries. Before: 1,872,306 bytes (235.00 kB gzip). After: 1,621,577 bytes (229.02 kB gzip), 250,729 bytes / 13.4% less uncompressed. The native macOS menu previously fetched the index a second time. | Fetch once, in parallel with language-pack lookup; reuse the parsed index for the menu. Skip the request for an English native menu. Missing translations still fall back to source text or SideX's own strings.                                  |
+| Startup JavaScript | `assets/nls.js`: 6.24 MB (1.72 MB gzip); `workbench.common.main-*.js`: 4.07 MB (1.11 MB gzip). Vite reports a >5 MB chunk despite the 5 MB warning threshold.                                                                         | Profile the module graph and startup parse time before changing the NLS/core `manualChunks` rules in `vite.config.ts`; the explicit NLS entry preserves translation initialization order. A blind split could break top-level `localize()` calls. |
+| Extension catalog  | `scripts/postbuild.js` recursively copies the optional `extensions/` tree. Its size depends on the local catalog, outside the JS/CSS totals printed by the postbuild summary.                                                         | Measure packaged app size with and without `npm run setup:full`, then prune extensions using a compatibility list if distribution size is an issue.                                                                                               |
+| Tauri API imports  | Vite reports static and dynamic imports of `@tauri-apps/api/core` and `event` in the same graph; these dynamic imports cannot form separate chunks.                                                                                   | Inspect cold-start traces before refactoring imports; no runtime improvement is established by the build warning alone.                                                                                                                           |
+
+Reproduce: `npm run build`; compare `dist/nls.messages.json` and the size
+report with the values above. A renderer-only build does not measure native
+startup, extension activation, or editor latency under a real workspace.

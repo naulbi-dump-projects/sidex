@@ -6,6 +6,19 @@ interface NlsEntry {
 	msg: string;
 }
 
+let nlsEntriesPromise: Promise<NlsEntry[] | null> | undefined;
+
+export function getNlsEntries(): Promise<NlsEntry[] | null> {
+	return (nlsEntriesPromise ??= fetch('/nls.messages.json')
+		.then(async response => {
+			if (!response.ok || !(response.headers.get('content-type') ?? '').includes('json')) {
+				return null;
+			}
+			return (await response.json()) as NlsEntry[];
+		})
+		.catch(() => null));
+}
+
 const sidexTranslations: Record<string, Translations> = {
 	'zh-cn': {
 		'remote.pick.placeholder': '选择一个选项来打开远程窗口',
@@ -536,6 +549,8 @@ export async function loadNlsMessages(): Promise<void> {
 	if (!locale || locale.toLowerCase().startsWith('en')) {
 		return;
 	}
+	// Fetch the index while looking up a locally installed language pack.
+	const entriesPromise = getNlsEntries();
 
 	let extensionId = localStorage.getItem('vscode.nls.languagePackExtensionId');
 	console.log('[SideX NLS] extensionId from localStorage:', extensionId);
@@ -557,25 +572,20 @@ export async function loadNlsMessages(): Promise<void> {
 
 		if (!translations) {
 			console.warn('[SideX NLS] No translations found for', extensionId);
+			await loadSidexOnlyMessages(locale);
 			return;
 		}
 
 		const sidexExtra = getSidexTranslations(locale);
 
-		const indexRes = await fetch('/nls.messages.json');
-		if (indexRes.ok) {
-			const contentType = indexRes.headers.get('content-type') ?? '';
-			if (contentType.includes('json')) {
-				const nlsEntries: NlsEntry[] = await indexRes.json();
-				if (nlsEntries.length > 0) {
-					(globalThis as any)._VSCODE_NLS_MESSAGES = nlsEntries.map(
-						entry => translations[scopedTranslationKey(entry.module, entry.key)] ?? sidexExtra?.[entry.key] ?? entry.msg
-					);
-					(globalThis as any)._VSCODE_NLS_LANGUAGE = locale;
-					console.log(`[SideX NLS] Loaded ${nlsEntries.length} translations for ${locale} (indexed mode)`);
-					return;
-				}
-			}
+		const nlsEntries = await entriesPromise;
+		if (nlsEntries?.length) {
+			(globalThis as any)._VSCODE_NLS_MESSAGES = nlsEntries.map(
+				entry => translations[scopedTranslationKey(entry.module, entry.key)] ?? sidexExtra?.[entry.key] ?? entry.msg
+			);
+			(globalThis as any)._VSCODE_NLS_LANGUAGE = locale;
+			console.log(`[SideX NLS] Loaded ${nlsEntries.length} translations for ${locale} (indexed mode)`);
+			return;
 		}
 
 		(globalThis as any)._VSCODE_NLS_TRANSLATIONS = sidexExtra ?? {};
@@ -583,6 +593,7 @@ export async function loadNlsMessages(): Promise<void> {
 		console.log(`[SideX NLS] Loaded ${Object.keys(translations).length} translations for ${locale} (key mode)`);
 	} catch (e) {
 		console.warn('[SideX NLS] Failed to load translations:', e);
+		await loadSidexOnlyMessages(locale);
 	}
 }
 
@@ -592,12 +603,11 @@ async function loadSidexOnlyMessages(locale: string): Promise<void> {
 		return;
 	}
 
-	const indexRes = await fetch('/nls.messages.json');
-	if (!indexRes.ok || !(indexRes.headers.get('content-type') ?? '').includes('json')) {
+	const entries = await getNlsEntries();
+	if (!entries) {
 		return;
 	}
 
-	const entries: NlsEntry[] = await indexRes.json();
 	(globalThis as any)._VSCODE_NLS_MESSAGES = entries.map(entry => sidexExtra[entry.key] ?? entry.msg);
 	(globalThis as any)._VSCODE_NLS_LANGUAGE = locale;
 }

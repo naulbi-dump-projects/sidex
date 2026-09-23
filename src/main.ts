@@ -3,7 +3,7 @@
  *  Entry point. Globals set by inline script in index.html.
  *--------------------------------------------------------------------------------------------*/
 
-import { loadNlsMessages } from './nls-loader.js';
+import { getNlsEntries, loadNlsMessages } from './nls-loader.js';
 
 async function sidexOpenFolder() {
 	try {
@@ -463,7 +463,7 @@ async function updateNativeMenuLabels() {
 	}
 
 	const nlsMessages: string[] | undefined = (globalThis as any)._VSCODE_NLS_MESSAGES;
-	if (!nlsMessages) {
+	if (!nlsMessages?.length) {
 		return;
 	}
 
@@ -526,11 +526,10 @@ async function updateNativeMenuLabels() {
 	};
 
 	try {
-		const indexRes = await fetch('/nls.messages.json');
-		if (!indexRes.ok) {
+		const nlsEntries = await getNlsEntries();
+		if (!nlsEntries) {
 			return;
 		}
-		const nlsEntries: Array<{ key: string; msg: string }> = await indexRes.json();
 
 		const labels: Record<string, string> = {};
 
