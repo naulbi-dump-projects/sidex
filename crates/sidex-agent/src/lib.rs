@@ -11,7 +11,8 @@ pub mod skills;
 pub mod tools;
 
 #[cfg(test)]
-mod tests;
+#[path = "tests.rs"]
+mod agent_tests;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
